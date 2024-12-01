@@ -67,7 +67,7 @@ export default function BookDetails({ navigation, route }) {
   return (
     <View style={styles.container}>
       {/* Book details */}
-      {["title", "author", "year", "subject", "price"].map((field, index) => (
+      {["title", "author", "year", "subject", "price", "university", "semester"].map((field, index) => (
         <View style={styles.row} key={index}>
           <Text style={styles.label}>
             {field.charAt(0).toUpperCase() + field.slice(1)}:

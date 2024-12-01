@@ -3,25 +3,43 @@ import {
   StyleSheet,
   Text,
   View,
-  FlatList,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from "react-native";
-import app from "../FirebaseConfig"
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, update } from "firebase/database";
+import { FontAwesome } from "@expo/vector-icons";
 import globalStyles from "../styles/globalStyles";
 
 export default function App({ navigation }) {
-  const [books, setBooks] = useState(null); // State for books
-  const [filteredBooks, setFilteredBooks] = useState(null); // State for filtered books
+  const [books, setBooks] = useState([]); // State for books
+  const [filteredBooks, setFilteredBooks] = useState([]); // State for filtered books
   const [search, setSearch] = useState(""); // State for search query
+  const [dropdowns, setDropdowns] = useState({
+    university: false,
+    programme: false,
+    semester: false,
+    subject: false,
+  });
+
+  const [filters, setFilters] = useState({
+    university: "",
+    programme: "",
+    semester: "",
+    subject: "",
+  });
+
+  const options = {
+    university: ["Copenhagen Business School", "Københavns Universitet"],
+    programme: ["HA (it.)", "HA (alm)", "Økonomi", "Psykologi"],
+    semester: ["1. semester", "2. semester", "3. semester"],
+    subject: ["Finansiering", "Organisationsteori", "BIS"],
+  };
 
   useEffect(() => {
-    // Get a reference to the database
     const db = getDatabase();
     const booksRef = ref(db, "Books");
 
-    // Fetch books data from Firebase
     const unsubscribe = onValue(
       booksRef,
       (snapshot) => {
@@ -30,6 +48,7 @@ export default function App({ navigation }) {
           const booksList = Object.entries(data).map(([key, value]) => ({
             id: key,
             ...value,
+            liked: value.liked || false, // Initialize liked status
           }));
           setBooks(booksList);
           setFilteredBooks(booksList); // Initialize filteredBooks with the full book list
@@ -38,90 +57,196 @@ export default function App({ navigation }) {
           setFilteredBooks([]);
         }
       },
-      (error) => {
-        console.error("Error fetching data: ", error);
-      }
+      (error) => console.error("Error fetching data: ", error)
     );
 
-    return () => unsubscribe(); // Cleanup function
+    return () => unsubscribe();
   }, []);
 
-  // Handle search input and filter the book list
-  const handleSearch = (text) => {
-    setSearch(text);
+  useEffect(() => {
+    applySearchAndFilters();
+  }, [filters, search]);
 
-    // Filter books based on the search query (by title or author)
-    if (books) {
-      const filtered = books.filter(
+  const applySearchAndFilters = () => {
+    if (!books.length) return;
+
+    let filtered = books;
+
+    if (search) {
+      filtered = filtered.filter(
         (book) =>
-          book.title.toLowerCase().includes(text.toLowerCase()) ||
-          book.author.toLowerCase().includes(text.toLowerCase())
+          book.title?.toLowerCase().includes(search.toLowerCase()) ||
+          book.author?.toLowerCase().includes(search.toLowerCase())
       );
-      setFilteredBooks(filtered);
     }
+
+    if (filters.university) {
+      filtered = filtered.filter(
+        (book) => book.university === filters.university
+      );
+    }
+    if (filters.programme) {
+      filtered = filtered.filter(
+        (book) => book.programme === filters.programme
+      );
+    }
+    if (filters.semester) {
+      filtered = filtered.filter((book) => book.semester === filters.semester);
+    }
+    if (filters.subject) {
+      filtered = filtered.filter((book) => book.subject === filters.subject);
+    }
+
+    setFilteredBooks(filtered);
   };
 
-  // Function to handle selecting a book
+  const toggleDropdown = (field) => {
+    setDropdowns((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const handleFilterChange = (field, value) => {
+    setFilters((prevFilters) => ({ ...prevFilters, [field]: value }));
+    setDropdowns((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      university: "",
+      programme: "",
+      semester: "",
+      subject: "",
+    });
+    setSearch("");
+    setFilteredBooks(books);
+  };
+
   const handleSelectBook = (id) => {
     const selectedBook = filteredBooks.find((book) => book.id === id);
     if (selectedBook) {
-      navigation.navigate("BookDetails", { book: selectedBook }); // Navigate to BookDetails screen with selected book
+      navigation.navigate("BookDetails", { book: selectedBook });
     } else {
       console.error("Book with ID " + id + " not found");
     }
   };
 
-  if (!filteredBooks) {
+  const toggleLike = (id) => {
+    const updatedBooks = books.map((book) =>
+      book.id === id ? { ...book, liked: !book.liked } : book
+    );
+    setBooks(updatedBooks);
+    setFilteredBooks(updatedBooks);
+
+    // Update Firebase
+    const db = getDatabase();
+    const bookRef = ref(db, `Books/${id}`);
+    const likedBook = updatedBooks.find((book) => book.id === id);
+    update(bookRef, { liked: likedBook.liked });
+  };
+
+  if (books.length === 0) {
     return <Text>Loading books...</Text>;
   }
 
+  if (filteredBooks.length === 0) {
+    return <Text>No books match the filters.</Text>;
+  }
+
   return (
-    <View style={globalStyles.container}>
+    <ScrollView style={globalStyles.container}>
       <Text style={globalStyles.heading}>BookSwap</Text>
 
-      {/* Search Input */}
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Søg efter titel eller forfatter"
-        value={search}
-        onChangeText={handleSearch} // Filter the list as user types
-        // backgroundcolor of the input field
-        backgroundColor="white"
-      />
+      <View style={globalStyles.filterBox}>
+        <TextInput
+          style={globalStyles.searchInput}
+          placeholder="Search by title or author"
+          value={search}
+          onChangeText={setSearch}
+        />
+        <Text style={globalStyles.filterByText}>Filter by:</Text>
 
-      {/* Grid of books */}
+        {Object.keys(options).map((field) => (
+          <View
+            key={field}
+            style={[
+              globalStyles.dropdownContainer,
+              dropdowns[field] && { zIndex: 1000 },
+            ]}
+          >
+            <TouchableOpacity
+              style={globalStyles.dropdownButton}
+              onPress={() => toggleDropdown(field)}
+            >
+              <Text style={globalStyles.dropdownButtonText}>
+                {filters[field] || `Select ${field}`}
+              </Text>
+            </TouchableOpacity>
+            {dropdowns[field] && (
+              <View style={globalStyles.dropdownList}>
+                {options[field].map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      globalStyles.dropdownItem,
+                      index === options[field].length - 1 &&
+                        globalStyles.dropdownItemLast,
+                    ]}
+                    onPress={() => handleFilterChange(field, option)}
+                  >
+                    <Text style={globalStyles.dropdownItemText}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        ))}
+
+        <TouchableOpacity
+          style={globalStyles.resetButton}
+          onPress={handleResetFilters}
+        >
+          <Text style={globalStyles.resetButtonText}>Reset Filters</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.gridContainer}>
         {filteredBooks.map((book) => (
-          <TouchableOpacity
-            key={book.id}
-            style={styles.box}
-            onPress={() => handleSelectBook(book.id)} // Navigate to BookDetails
-          >
-            <Text style={styles.boxText}>{book.title}</Text>
-            <Text style={styles.boxTextSmall}>{book.author}</Text>
-            <Text style={styles.boxTextSmall}>({book.year})</Text>
-          </TouchableOpacity>
+          <View key={book.id} style={styles.box}>
+            <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
+              <Text style={styles.boxText}>{book.title}</Text>
+              <Text style={styles.boxTextSmall}>{book.author}</Text>
+              <Text style={styles.boxTextSmall}>
+                {book.subject || "No subject"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <FontAwesome
+                name={book.liked ? "heart" : "heart-o"}
+                size={24}
+                color="#FF0000"
+              />
+            </TouchableOpacity>
+          </View>
         ))}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
-    flexWrap: "wrap", // Ensures items wrap to the next row
-    justifyContent: "space-between", // Spreads columns evenly
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginTop: 20,
   },
   box: {
-    width: "48%", // Each box takes up nearly half of the row (adjusted for spacing)
-    aspectRatio: 1, // Makes the box square
+    width: "48%",
+    aspectRatio: 1.2,
     backgroundColor: "#DB8D16",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10, // Adds spacing between rows
-    borderRadius: 5, // Optional: Rounded corners for boxes
+    marginBottom: 10,
+    borderRadius: 5,
     padding: 10,
   },
   boxText: {
@@ -133,13 +258,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     textAlign: "center",
-  },
-  searchInput: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingLeft: 10,
-    borderRadius: 5,
   },
 });

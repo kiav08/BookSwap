@@ -15,6 +15,7 @@ import Login from "./screens/Login";
 import Profile from "./screens/Profile";
 import Points from "./screens/Points";
 
+
 // Creating navigators
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -53,6 +54,7 @@ const ProfileStack = () => {
       <Stack.Screen name="EditBook" component={EditBook} />
       <Stack.Screen name="AddBook" component={AddBook} />
       <Stack.Screen name="Chat" component={Chat} />
+
     </Stack.Navigator>
   );
 };
