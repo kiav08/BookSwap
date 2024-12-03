@@ -6,28 +6,31 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import { FontAwesome } from "@expo/vector-icons";
 import globalStyles from "../styles/globalStyles";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../FirebaseConfig";
 
-export default function App({ navigation }) {
-  const [books, setBooks] = useState([]); // State for books
-  const [filteredBooks, setFilteredBooks] = useState([]); // State for filtered books
-  const [search, setSearch] = useState(""); // State for search query
+export default function Homepage({ navigation }) {
+  const [books, setBooks] = useState([]);
+  const [filteredBooks, setFilteredBooks] = useState([]);
+  const [search, setSearch] = useState("");
   const [dropdowns, setDropdowns] = useState({
     university: false,
     programme: false,
     semester: false,
     subject: false,
   });
-
   const [filters, setFilters] = useState({
     university: "",
     programme: "",
     semester: "",
     subject: "",
   });
+  const [user, setUser] = useState(null);
 
   const options = {
     university: ["Copenhagen Business School", "Københavns Universitet"],
@@ -48,10 +51,10 @@ export default function App({ navigation }) {
           const booksList = Object.entries(data).map(([key, value]) => ({
             id: key,
             ...value,
-            liked: value.liked || false, // Initialize liked status
+            liked: value.liked || false,
           }));
           setBooks(booksList);
-          setFilteredBooks(booksList); // Initialize filteredBooks with the full book list
+          setFilteredBooks(booksList);
         } else {
           setBooks([]);
           setFilteredBooks([]);
@@ -66,6 +69,13 @@ export default function App({ navigation }) {
   useEffect(() => {
     applySearchAndFilters();
   }, [filters, search]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const applySearchAndFilters = () => {
     if (!books.length) return;
@@ -130,17 +140,41 @@ export default function App({ navigation }) {
   };
 
   const toggleLike = (id) => {
-    const updatedBooks = books.map((book) =>
-      book.id === id ? { ...book, liked: !book.liked } : book
-    );
-    setBooks(updatedBooks);
-    setFilteredBooks(updatedBooks);
+    if (!user) {
+      // Hvis brugeren ikke er logget ind
+      Alert.alert(
+        "Login påkrævet",
+        "Du skal være logget ind for at like en bog.",
+        [
+          {
+            text: "Gå til login",
+            onPress: () => navigation.navigate("Profile"),
+          },
+        ]
+      );
+      return;
+    }
 
-    // Update Firebase
     const db = getDatabase();
     const bookRef = ref(db, `Books/${id}`);
-    const likedBook = updatedBooks.find((book) => book.id === id);
-    update(bookRef, { liked: likedBook.liked });
+    const updatedBooks = books.map((book) => {
+      if (book.id === id) {
+        const liked = !book.liked;
+        const likedBy = book.likedBy || [];
+        if (liked) {
+          likedBy.push(user.uid);
+        } else {
+          const index = likedBy.indexOf(user.uid);
+          if (index > -1) likedBy.splice(index, 1);
+        }
+        update(bookRef, { liked, likedBy });
+        return { ...book, liked, likedBy };
+      }
+      return book;
+    });
+
+    setBooks(updatedBooks);
+    setFilteredBooks(updatedBooks);
   };
 
   if (books.length === 0) {
@@ -218,11 +252,11 @@ export default function App({ navigation }) {
                 {book.subject || "No subject"}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => toggleLike(book.id)}>
               <FontAwesome
                 name={book.liked ? "heart" : "heart-o"}
                 size={24}
-                color="#FF0000"
+                color={book.liked ? "#FF0000" : "#000"}
               />
             </TouchableOpacity>
           </View>
