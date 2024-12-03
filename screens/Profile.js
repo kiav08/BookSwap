@@ -6,6 +6,7 @@ import {
   TextInput,
   Image,
   Alert,
+  ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -19,6 +20,7 @@ import {
   fetchLikedBooks,
 } from "../screens/authFunctions";
 import globalStyles from "../styles/globalStyles";
+import {useNavigation} from "@react-navigation/native";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -29,6 +31,8 @@ export default function Profile() {
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [books, setBooks] = useState([]);
+  const navigation = useNavigation();
+
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthState(setUser, (userId) => {
@@ -38,6 +42,11 @@ export default function Profile() {
     });
     return () => unsubscribe();
   }, []);
+
+      // Navigate to AddBook screen
+      const handleAddBook = () => {
+        navigation.navigate("AddBook");
+      };
 
   const handleUploadPicture = async () => {
     const permissionResult =
@@ -125,7 +134,7 @@ export default function Profile() {
   }
 
   return (
-    <View style={globalStyles.container}>
+    <ScrollView style={globalStyles.container}>
       <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
 
       <View style={{ alignItems: "center", marginBottom: 20 }}>
@@ -150,6 +159,14 @@ export default function Profile() {
         </TouchableOpacity>
       </View>
 
+      <View style={globalStyles.separator} />
+
+        {/* Add Book Button */}
+        <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>
+          <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
+        </TouchableOpacity>
+
+        <View style={globalStyles.sectionContainer}>
       <Text style={globalStyles.heading}>Dine bøger:</Text>
       <View style={globalStyles.gridContainer}>
         {books.map((book) => (
@@ -157,7 +174,12 @@ export default function Profile() {
             key={book.id}
             style={globalStyles.box}
             onPress={() => console.log("Book selected:", book)}
-          >
+            >
+            <Image
+            source={{ uri: book.imageUri  }} // Adjust this to match your Firebase image key
+            style={globalStyles.bookImage}
+            />  
+            
             <Text style={globalStyles.boxText}>{book.title}</Text>
             <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
             <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
@@ -178,6 +200,7 @@ export default function Profile() {
             <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
           </TouchableOpacity>
         ))} */}
+                </View>
 
       <TouchableOpacity
         style={globalStyles.logoutButton}
@@ -185,6 +208,6 @@ export default function Profile() {
       >
         <Text style={globalStyles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
-    </View>
+      </ScrollView>
   );
 }

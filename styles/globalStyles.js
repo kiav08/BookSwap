@@ -124,19 +124,18 @@ const globalStyles = StyleSheet.create({
     justifyContent: 'space-between', // Space out book boxes
   },
   box: {
-    width: '48%', // Two columns
-    aspectRatio: 1, // Square boxes
-    backgroundColor: '#DB8D16', // Orange background
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+    backgroundColor: '#fff',
     borderRadius: 5,
+    margin: 10,
     padding: 10,
-  },
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: "#fff",
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 3,
+    flex: 1,
+    flexBasis: "40%",
+    maxWidth: "40%",
     },
     header: {
       fontSize: 20,
@@ -252,29 +251,14 @@ const globalStyles = StyleSheet.create({
       justifyContent: "space-between",
       marginTop: 20,
     },
-    box: {
-      width: "48%",
-      aspectRatio: 1,
-      backgroundColor: "#DB8D16", // Orange background
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 10,
-      borderRadius: 5,
-      padding: 10,
-      elevation: 2, // Subtle shadow for depth
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2,
-    },
     boxText: {
-      color: "#fff", // White text
+      color: "#000", // White text
       fontWeight: "bold",
       textAlign: "center",
       fontSize: 16,
     },
     boxTextSmall: {
-      color: "#fff", // White text
+      color: "#000", // White text
       fontSize: 12,
       textAlign: "center",
     },
@@ -325,7 +309,79 @@ const globalStyles = StyleSheet.create({
       fontWeight: "bold",
       fontSize: 16,
     },
-  
+    separator: {
+      height: 1,
+      backgroundColor: "#000",
+      marginVertical: 20,
+      width: "100%",
+      alignSelf: "center",
+      marginBottom: 20,
+    },
+    addButton: {
+      backgroundColor: "white",
+      borderRadius: 10,
+      padding: 15,
+      alignItems: "center",
+      marginTop: 20,
+      marginBottom: 20,
+    },
+    addButtonText: {
+      color: "0000",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    bookImage: {
+      width: "100%",
+      height: "150",
+      resizeMode: "cover",
+      borderRadius: 5,
+      marginBottom: 10,
+    },
+    sectionContainer: {
+      marginBottom: 10,
+      borderRadius: 5,
+      padding: 10,
+      backgroundColor: "#f0f0f0",
+      borderRadius: 10,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: "#333",
+      marginBottom: 10,
+    },
+    stepContainer: {
+      backgroundColor: "#D08D16",
+      paddingVertical: 90,
+      alignItems: "center",
+      shadowColor: "#000",
+      elevation: 5,
+      marginBottom: 20,
+      width: "100%",
+    },
+    highlightedSubtitleText: {
+      fontSize: 24, 
+      fontWeight: "bold", 
+      color: "#FFFFFF",
+      textAlign: "center",
+      marginBottom: 10, 
+      textShadowColor: "#000000",
+      textShadowRadius: 3, 
+    },
+    descriptionText: {
+      fontSize: 14,
+      fontWeight: "bold",
+      fontStyle: "italic", 
+      color: "#FFF5E1", 
+      textAlign: "center",
+    },
+    gridContainers: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
 });
 
 export default globalStyles;

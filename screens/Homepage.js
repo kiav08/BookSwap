@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
-  StyleSheet,
   Text,
   View,
   TouchableOpacity,
   TextInput,
   ScrollView,
   Alert,
+  StyleSheet,
+  Image,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import { FontAwesome } from "@expo/vector-icons";
@@ -189,6 +190,19 @@ export default function Homepage({ navigation }) {
     <ScrollView style={globalStyles.container}>
       <Text style={globalStyles.heading}>BookSwap</Text>
 
+      <View style={globalStyles.stepContainer}>
+        <Text style={globalStyles.highlightedSubtitleText}>
+          Del og opdag brugte bøger
+        </Text>
+        <Text style={globalStyles.descriptionText}>
+          Find din næste yndlingsbog blandt vores udvalg👇
+        </Text>
+      </View>
+
+      <View style={globalStyles.separator} />
+
+      <Text style={globalStyles.title}>Søg blandt udvalg</Text>
+
       <View style={globalStyles.filterBox}>
         <TextInput
           style={globalStyles.searchInput}
@@ -242,13 +256,22 @@ export default function Homepage({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.gridContainer}>
+      <View style={globalStyles.separator} />
+
+      <Text style={globalStyles.title}>Udforsk bøger her</Text> 
+
+      <View style={globalStyles.sectionContainer}>
+      <View style={globalStyles.gridContainers}>
         {filteredBooks.map((book) => (
-          <View key={book.id} style={styles.box}>
+          <View key={book.id} style={globalStyles.box}>
+            <Image
+            source={{ uri: book.imageUri  }} // Adjust this to match your Firebase image key
+            style={globalStyles.bookImage}
+            />  
             <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
-              <Text style={styles.boxText}>{book.title}</Text>
-              <Text style={styles.boxTextSmall}>{book.author}</Text>
-              <Text style={styles.boxTextSmall}>
+              <Text style={globalStyles.boxText}>{book.title}</Text>
+              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+              <Text style={globalStyles.boxTextSmall}>
                 {book.subject || "No subject"}
               </Text>
             </TouchableOpacity>
@@ -258,39 +281,13 @@ export default function Homepage({ navigation }) {
                 size={24}
                 color={book.liked ? "#FF0000" : "#000"}
               />
+            
             </TouchableOpacity>
+            
           </View>
         ))}
+      </View>
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  box: {
-    width: "48%",
-    aspectRatio: 1.2,
-    backgroundColor: "#DB8D16",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    borderRadius: 5,
-    padding: 10,
-  },
-  boxText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  boxTextSmall: {
-    color: "#fff",
-    fontSize: 12,
-    textAlign: "center",
-  },
-});
