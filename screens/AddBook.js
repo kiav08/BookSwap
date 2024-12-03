@@ -9,13 +9,10 @@ import {
   Alert,
   View,
   Text,
-  Image,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { getDatabase, ref, push } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { auth } from "../FirebaseConfig"; // Import auth to get current user
-import { TouchableOpacity } from 'react-native';
 
 export default function AddBook() {
   const db = getDatabase();
@@ -39,25 +36,6 @@ export default function AddBook() {
   };
 
   const [NewBook, setNewBook] = useState(initialState);
-  const [imageUri, setImageUri] = useState(null); 
-
-  const uploadImageAsync = async (uri) => {
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => resolve(xhr.response);
-      xhr.onerror = reject;
-      xhr.responseType = "blob";
-      xhr.open("GET", uri, true);
-      xhr.send();
-    });
-  
-    const storage = getStorage();
-    const imageRef = storageRef(storage, "bookImages/" + new Date().toISOString());
-    await uploadBytes(imageRef, blob);
-    const downloadURL = await getDownloadURL(imageRef);
-    blob.close();
-    return downloadURL;
-  };
 
   const changeTextInput = (name, event) => {
     setNewBook({ ...NewBook, [name]: event });
@@ -90,7 +68,6 @@ export default function AddBook() {
       sellerId,
       sellerEmail,
       status: "active", // Default status
-      imageUri: imageUri || null, // Include image URI if available
     };
 
     const booksRef = ref(db, "Books/");
@@ -103,40 +80,6 @@ export default function AddBook() {
       .catch((error) => {
         console.error(`Error: ${error.message}`);
       });
-  };
-
-  const openCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    if (permissionResult.granted === false) {
-      alert("Adgang til kameraet er påkrævet!");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  const openImageLibrary = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      alert("Adgang til billedbiblioteket er påkrævet!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-    }
   };
 
   return (
@@ -155,17 +98,8 @@ export default function AddBook() {
             </View>
           );
         })}
-        <View style={styles.imageContainer}>
-          {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
-          <TouchableOpacity onPress={openCamera} style={styles.button}>
-            <Text style={styles.buttonText}>Åben Kamera</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={openImageLibrary} style={styles.button}>
-            <Text style={styles.buttonText}>Åben Album</Text>
-          </TouchableOpacity>
-        </View>
-        <Button title={"Add book"} onPress={handleSave} />   
-        </ScrollView>
+        <Button title={"Add book"} onPress={handleSave} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -188,26 +122,5 @@ const styles = StyleSheet.create({
     borderColor: "gray",
     borderWidth: 1,
     paddingLeft: 8,
-  },
-  imageContainer: {
-    marginVertical: 20,
-    alignItems: "center",
-  },
-  image: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: "#4CAF50", // Green background
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
   },
 });

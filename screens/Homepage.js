@@ -155,17 +155,6 @@ export default function App({ navigation }) {
     <ScrollView style={globalStyles.container}>
       <Text style={globalStyles.heading}>BookSwap</Text>
 
-      <View style={styles.stepContainer}>
-        <Text style={styles.highlightedSubtitleText}>
-          Del og opdag brugte bøger
-        </Text>
-        <Text style={styles.descriptionText}>
-          Find din næste yndlingsbog blandt vores udvalg👇
-        </Text>
-      </View>
-
-    <View style={styles.separator} />
-    <Text style={styles.title}>Søg blandt udvalg</Text>
       <View style={globalStyles.filterBox}>
         <TextInput
           style={globalStyles.searchInput}
@@ -219,10 +208,6 @@ export default function App({ navigation }) {
         </TouchableOpacity>
       </View>
 
-          {/* Separator */}
-    <View style={styles.separator} />
-
-    <Text style={styles.title}>Udforsk bøger her</Text>
       <View style={styles.gridContainer}>
         {filteredBooks.map((book) => (
           <View key={book.id} style={styles.box}>
@@ -248,33 +233,6 @@ export default function App({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  stepContainer: {
-    backgroundColor: "#D08D16",
-    paddingVertical: 90,
-    alignItems: "center",
-    shadowColor: "#000",
-    elevation: 5,
-    marginBottom: 20,
-    width: "100%",
-  },
-  highlightedSubtitleText: {
-    fontSize: 24, 
-    fontWeight: "bold", 
-    color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 10, 
-    textShadowColor: "#000000",
-    textShadowRadius: 3, 
-  },
-  descriptionText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    fontStyle: "italic", 
-    color: "#FFF5E1", 
-    textAlign: "center",
-    marginHorizontal: 15,
-  },
-
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -284,7 +242,7 @@ const styles = StyleSheet.create({
   box: {
     width: "48%",
     aspectRatio: 1.2,
-    backgroundColor: "#D08D16",
+    backgroundColor: "#DB8D16",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
@@ -300,20 +258,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     textAlign: "center",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#000",
-    marginVertical: 20,
-    width: "100%",
-    alignSelf: "center",
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#333",
-    marginBottom: 10,
   },
 });

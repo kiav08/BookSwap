@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../FirebaseConfig";
 import { getDatabase, ref, update } from "firebase/database";
-import { Image } from 'react-native';
-
 
 export default function BookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
@@ -67,13 +65,7 @@ export default function BookDetails({ navigation, route }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
     <View style={styles.container}>
-      {/* Book image */}
-      {book.imageUri && (
-        <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-      )}
-
       {/* Book details */}
       {["title", "author", "year", "subject", "price", "university", "semester"].map((field, index) => (
         <View style={styles.row} key={index}>
@@ -83,6 +75,7 @@ export default function BookDetails({ navigation, route }) {
           <Text style={styles.value}>{book[field]}</Text>
         </View>
       ))}
+
       {/* Buy button */}
       <TouchableOpacity
         style={styles.buyButton}
@@ -99,7 +92,6 @@ export default function BookDetails({ navigation, route }) {
         <Text style={styles.chatButtonText}>Skriv til sælger</Text>
       </TouchableOpacity>
     </View>
-    </ScrollView>
   );
 }
 
@@ -125,13 +117,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#f5f5f5",
   },
-  bookImage: {
-    width: 200,
-    height: 200,
-    marginTop: 10,
-    borderRadius: 5,
-    resizeMode: "cover",
-  },
   buyButton: {
     backgroundColor: "blue",
     padding: 10,
@@ -154,18 +139,4 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
-  bookImage: {
-    width: "100%",  
-    height: 300,                
-    marginTop: 10,
-    borderRadius: 15,
-    resizeMode: "cover",      
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2, 
-    shadowRadius: 10,
-  },          
 });

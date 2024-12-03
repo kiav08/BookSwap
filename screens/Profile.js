@@ -5,8 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  TextInput,
-  Image, 
+  TextInput
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -18,7 +17,6 @@ import {
 import { getDatabase, ref, onValue } from "firebase/database";
 import { auth } from "../FirebaseConfig";
 import globalStyles from "../styles/globalStyles";
-import { ScrollView } from "react-native"; 
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -64,11 +62,6 @@ export default function Profile() {
     );
   };
 
-    // Navigate to AddBook screen
-    const handleAddBook = () => {
-      navigation.navigate("AddBook");
-    };
-
   // Handle selecting a book and navigating to EditBook
   const handleSelectBook = (book) => {
     navigation.navigate("EditBook", { book }); // Navigate to EditBook screen
@@ -111,23 +104,10 @@ export default function Profile() {
   // Render the logged-in view
   if (user) {
     return (
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={globalStyles.container}>
-
-        <View style={styles.bannerContainer}>
-        <Text style={styles.bannerText}>Velkommen, {user.email}</Text>
-        </View>
-
-      <View style={styles.separator} />
-
-        {/* Add Book Button */}
-          <TouchableOpacity style={styles.addButton} onPress={handleAddBook}>
-          <Text style={styles.addButtonText}>Opret ny annonce</Text>
-        </TouchableOpacity>
-
-
-        <View style={styles.sectionContainer}>
+        <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
         <Text style={globalStyles.heading}>Dine bøger:</Text>
+
         {/* Grid of books */}
         <View style={styles.gridContainer}>
           {books.map((book) => (
@@ -136,50 +116,26 @@ export default function Profile() {
               style={styles.box}
               onPress={() => handleSelectBook(book)} // Navigate to EditBook screen
             >
-
-            <Image
-            source={{ uri: book.imageUri  }} // Adjust this to match your Firebase image key
-            style={styles.bookImage}
-            />  
-
               <Text style={styles.boxText}>{book.title}</Text>
               <Text style={styles.boxTextSmall}>{book.author}</Text>
               <Text style={styles.boxTextSmall}>({book.year})</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.separator} />
 
-        <View style={styles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine likede bøger:</Text>
-        </View>
-
-        <View style={styles.separator} />
-
-        <View style={styles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine fulgte bøger:</Text>
-        </View>
-        <View style={styles.separator} />
-        </View>
-
-        <View style={styles.separator} />
-
-    
-
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
-      </ScrollView>
     );
   }
 
   // Render the login and account creation view
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
     <View style={globalStyles.container}>
       <Text style={styles.text}>Login</Text>
       <TextInput
@@ -220,57 +176,33 @@ export default function Profile() {
         <Text style={styles.createAccountButtonText}>Create Account</Text>
       </TouchableOpacity>
     </View>
-    </ScrollView>
-
   );
 }
 
 const styles = StyleSheet.create({
-  bannerContainer: {
-    backgroundColor: "#D08D16", 
-    paddingVertical: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    marginBottom: 20,
-  },
-  bannerText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginTop: 20,
   },
-  sectionContainer: {
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-  },
   box: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    margin: 10,
+    width: "48%",
+    aspectRatio: 1,
+    backgroundColor: "#DB8D16",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    borderRadius: 5,
     padding: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
-    elevation: 3,
-    flex: 1,
-    maxWidth: '48%',
   },
   boxText: {
-    color: "#000",
+    color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
   },
   boxTextSmall: {
-    color: "#000",
+    color: "#fff",
     fontSize: 12,
     textAlign: "center",
   },
@@ -321,33 +253,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
-  },
-  addButton: {
-    backgroundColor: "#156056",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  addButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#000",
-    marginVertical: 20,
-    width: "100%",
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  bookImage: {
-    width: "100%",
-    height: "150",
-    resizeMode: "cover",
-    borderRadius: 5,
-    marginBottom: 10,
   },
 });
