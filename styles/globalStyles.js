@@ -228,6 +228,103 @@ const globalStyles = StyleSheet.create({
       color: "#aaa",
       fontSize: 12,
     },
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: "#F0F0E5", // Light background for the app
+    },
+    heading: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "#333", // Dark text for headings
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    text: {
+      fontSize: 30,
+      color: "#333",
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    gridContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      marginTop: 20,
+    },
+    box: {
+      width: "48%",
+      aspectRatio: 1,
+      backgroundColor: "#DB8D16", // Orange background
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+      borderRadius: 5,
+      padding: 10,
+      elevation: 2, // Subtle shadow for depth
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+    },
+    boxText: {
+      color: "#fff", // White text
+      fontWeight: "bold",
+      textAlign: "center",
+      fontSize: 16,
+    },
+    boxTextSmall: {
+      color: "#fff", // White text
+      fontSize: 12,
+      textAlign: "center",
+    },
+    input: {
+      height: 40,
+      borderColor: "#8C806F", // Brown border
+      borderWidth: 1,
+      borderRadius: 20,
+      paddingHorizontal: 15,
+      backgroundColor: "#fff", // White background
+      marginBottom: 10,
+      fontSize: 16,
+      color: "#333", // Dark text
+    },
+    loginButton: {
+      backgroundColor: "#156056", // Green background
+      padding: 15,
+      borderRadius: 10,
+      alignItems: "center",
+      marginBottom: 30,
+    },
+    loginButtonText: {
+      color: "#fff", // White text
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    createAccountButton: {
+      backgroundColor: "#8C806F", // Brown background
+      padding: 15,
+      borderRadius: 10,
+      alignItems: "center",
+      marginBottom: 30,
+    },
+    createAccountButtonText: {
+      color: "#fff", // White text
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    logoutButton: {
+      backgroundColor: "#DB8D16", // Orange background
+      padding: 15,
+      borderRadius: 10,
+      alignItems: "center",
+      marginTop: 20,
+    },
+    logoutButtonText: {
+      color: "#fff", // White text
+      fontWeight: "bold",
+      fontSize: 16,
+    },
   
 });
 

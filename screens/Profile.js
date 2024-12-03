@@ -2,256 +2,189 @@ import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
-  StyleSheet,
   TouchableOpacity,
+  TextInput,
+  Image,
   Alert,
-  TextInput
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
-import { auth } from "../FirebaseConfig";
+  handleLogin,
+  handleCreateAccount,
+  handleLogout,
+  subscribeToAuthState,
+  fetchUserBooks,
+  uploadProfilePicture,
+  fetchUserProfile,
+  fetchLikedBooks,
+} from "../screens/authFunctions";
 import globalStyles from "../styles/globalStyles";
 
 export default function Profile() {
-  const navigation = useNavigation();
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState({});
+  const [likedBooks, setLikedBooks] = useState([]); // State for liked books
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [books, setBooks] = useState([]);
 
-  // Check if user is logged in
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        fetchUserBooks(currentUser.uid);
-      }
+    const unsubscribe = subscribeToAuthState(setUser, (userId) => {
+      fetchUserBooks(userId, setBooks); // Fetch user's books
+      fetchLikedBooks(userId, setLikedBooks); // Fetch liked books
+      fetchUserProfile(userId, setUserProfile); // Fetch user profile
     });
     return () => unsubscribe();
   }, []);
 
-  // Fetch the user's books from Firebase
-  const fetchUserBooks = (userId) => {
-    const db = getDatabase();
-    const booksRef = ref(db, "Books");
-    onValue(
-      booksRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const booksList = Object.entries(data)
-            .map(([key, value]) => ({
-              id: key,
-              ...value,
-            }))
-            .filter((book) => book.sellerId === userId);
-          setBooks(booksList);
-        }
-      },
-      (error) => {
-        console.error("Error fetching books:", error);
+  const handleUploadPicture = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Tilladelse påkrævet",
+        "Tilladelse til galleri er nødvendig."
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaType.Images, // Correct API usage
+        allowsEditing: true,
+        aspect: [1, 1], // Square crop
+        quality: 0.5,
+      });
+
+      if (result.canceled) {
+        Alert.alert("Handling annulleret", "Ingen billede blev valgt.");
+        return;
       }
-    );
+
+      const imageUri = result.assets[0].uri; // Correct URI format
+      const downloadURL = await uploadProfilePicture(user.uid, imageUri);
+      Alert.alert("Success", "Profilbillede opdateret!");
+      setUserProfile((prev) => ({ ...prev, profilePicture: downloadURL }));
+    } catch (error) {
+      console.error("Fejl under upload:", error);
+      Alert.alert("Fejl", "Kunne ikke uploade profilbillede.");
+    }
   };
 
-  // Handle selecting a book and navigating to EditBook
-  const handleSelectBook = (book) => {
-    navigation.navigate("EditBook", { book }); // Navigate to EditBook screen
-  };
-
-  // Handle login
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, loginEmail, loginPassword)
-      .then(() => {
-        Alert.alert("Success", "Logged in successfully!");
-      })
-      .catch((error) => {
-        Alert.alert("Error", error.message);
-      });
-  };
-
-  // Handle account creation
-  const handleCreateAccount = () => {
-    createUserWithEmailAndPassword(auth, createEmail, createPassword)
-      .then(() => {
-        Alert.alert("Success", "Account created successfully!");
-      })
-      .catch((error) => {
-        Alert.alert("Error", error.message);
-      });
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        Alert.alert("Success", "Logged out successfully!");
-        setUser(null);
-      })
-      .catch((error) => {
-        Alert.alert("Error", error.message);
-      });
-  };
-
-  // Render the logged-in view
-  if (user) {
+  if (!user) {
     return (
       <View style={globalStyles.container}>
-        <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
-        <Text style={globalStyles.heading}>Dine bøger:</Text>
+        <Text style={globalStyles.text}>Login</Text>
+        <TextInput
+          style={globalStyles.input}
+          placeholder="Email"
+          value={loginEmail}
+          onChangeText={setLoginEmail}
+        />
+        <TextInput
+          style={globalStyles.input}
+          placeholder="Password"
+          value={loginPassword}
+          onChangeText={setLoginPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity
+          style={globalStyles.loginButton}
+          onPress={() => handleLogin(loginEmail, loginPassword, setUser)}
+        >
+          <Text style={globalStyles.loginButtonText}>Login</Text>
+        </TouchableOpacity>
 
-        {/* Grid of books */}
-        <View style={styles.gridContainer}>
-          {books.map((book) => (
-            <TouchableOpacity
-              key={book.id}
-              style={styles.box}
-              onPress={() => handleSelectBook(book)} // Navigate to EditBook screen
-            >
-              <Text style={styles.boxText}>{book.title}</Text>
-              <Text style={styles.boxTextSmall}>{book.author}</Text>
-              <Text style={styles.boxTextSmall}>({book.year})</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={globalStyles.heading}>Dine likede bøger:</Text>
-        <Text style={globalStyles.heading}>Dine fulgte bøger:</Text>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
+        <Text style={globalStyles.text}>Create Account</Text>
+        <TextInput
+          style={globalStyles.input}
+          placeholder="Email"
+          value={createEmail}
+          onChangeText={setCreateEmail}
+        />
+        <TextInput
+          style={globalStyles.input}
+          placeholder="Password"
+          value={createPassword}
+          onChangeText={setCreatePassword}
+          secureTextEntry
+        />
+        <TouchableOpacity
+          style={globalStyles.createAccountButton}
+          onPress={() => handleCreateAccount(createEmail, createPassword)}
+        >
+          <Text style={globalStyles.createAccountButtonText}>
+            Create Account
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  // Render the login and account creation view
   return (
     <View style={globalStyles.container}>
-      <Text style={styles.text}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={loginEmail}
-        onChangeText={setLoginEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={loginPassword}
-        onChangeText={setLoginPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Login</Text>
-      </TouchableOpacity>
+      <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
 
-      <Text style={styles.text}>Create Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={createEmail}
-        onChangeText={setCreateEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={createPassword}
-        onChangeText={setCreatePassword}
-        secureTextEntry
-      />
+      <View style={{ alignItems: "center", marginBottom: 20 }}>
+        <Image
+          source={
+            userProfile?.profilePicture
+              ? { uri: userProfile.profilePicture }
+              : require("../assets/default-profile.png")
+          }
+          style={{
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            marginBottom: 10,
+          }}
+        />
+        <TouchableOpacity
+          onPress={handleUploadPicture}
+          style={globalStyles.loginButton}
+        >
+          <Text style={globalStyles.loginButtonText}>Upload Profilbillede</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={globalStyles.heading}>Dine bøger:</Text>
+      <View style={globalStyles.gridContainer}>
+        {books.map((book) => (
+          <TouchableOpacity
+            key={book.id}
+            style={globalStyles.box}
+            onPress={() => console.log("Book selected:", book)}
+          >
+            <Text style={globalStyles.boxText}>{book.title}</Text>
+            <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+            <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={globalStyles.heading}>Dine likede bøger:</Text>
+      {/* <View style={globalStyles.gridContainer}>
+        {likedBooks.map((book) => (
+          <TouchableOpacity
+            key={book.id}
+            style={globalStyles.box}
+            onPress={() => console.log("Book selected:", book)}
+          >
+            <Text style={globalStyles.boxText}>{book.title}</Text>
+            <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+            <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+          </TouchableOpacity>
+        ))} */}
+
       <TouchableOpacity
-        style={styles.createAccountButton}
-        onPress={handleCreateAccount}
+        style={globalStyles.logoutButton}
+        onPress={() => handleLogout(setUser)}
       >
-        <Text style={styles.createAccountButtonText}>Create Account</Text>
+        <Text style={globalStyles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  box: {
-    width: "48%",
-    aspectRatio: 1,
-    backgroundColor: "#DB8D16",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    borderRadius: 5,
-    padding: 10,
-  },
-  boxText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  boxTextSmall: {
-    color: "#fff",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  logoutButton: {
-    backgroundColor: "red",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  logoutButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  text: {
-    fontSize: 30,
-    marginBottom: 10,
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    width: "80%",
-    marginBottom: 10,
-    paddingLeft: 8,
-  },
-  loginButton: {
-    backgroundColor: "#156056",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  loginButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  createAccountButton: {
-    backgroundColor: "#8C806F",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  createAccountButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});

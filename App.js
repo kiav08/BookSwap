@@ -15,7 +15,6 @@ import Login from "./screens/Login";
 import Profile from "./screens/Profile";
 import Points from "./screens/Points";
 
-
 // Creating navigators
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,7 +53,15 @@ const ProfileStack = () => {
       <Stack.Screen name="EditBook" component={EditBook} />
       <Stack.Screen name="AddBook" component={AddBook} />
       <Stack.Screen name="Chat" component={Chat} />
+    </Stack.Navigator>
+  );
+};
 
+// Stack for Chat
+const ChatStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Chat" component={Chat} />
     </Stack.Navigator>
   );
 };
@@ -76,7 +83,7 @@ const BottomNavigation = () => {
       />
       <Tab.Screen
         name="Chat"
-        component={Chat} // Add Chat as its own tab
+        component={ChatStack} // Use ChatStack instead of Chat
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" color={color} size={size} />
