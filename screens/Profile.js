@@ -8,20 +8,21 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import {
   handleLogin,
   handleCreateAccount,
   handleLogout,
   subscribeToAuthState,
   fetchUserBooks,
-  uploadProfilePicture,
   fetchUserProfile,
   fetchLikedBooks,
 } from "../screens/authFunctions";
+import { getDatabase, ref, update, onValue } from "firebase/database";
+import { getAuth } from "firebase/auth";
 import globalStyles from "../styles/globalStyles";
 import {useNavigation} from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -47,6 +48,8 @@ export default function Profile() {
     navigation.navigate("AddBook");
   };
 
+
+  //Funktionen for profilbillede som bliver gemt i AsyncStorage
   const handleUploadPicture = async () => {
     Alert.alert(
       "Vælg kilde",
@@ -61,23 +64,19 @@ export default function Profile() {
               Alert.alert("Tilladelse påkrævet", "Tilladelse til kamera er nødvendig.");
               return;
             }
-  
             try {
               const result = await ImagePicker.launchCameraAsync({
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.5,
               });
-  
               if (result.canceled) {
                 Alert.alert("Handling annulleret", "Ingen billede blev taget.");
                 return;
               }
-  
               const imageUri = result.assets[0].uri;
-              // Directly store the image URI in AsyncStorage
+              // Billedet bliver gemt i Async
               await AsyncStorage.setItem("profilePicture", imageUri);
-  
               Alert.alert("Success", "Profilbillede opdateret!");
               setUserProfile((prev) => ({
                 ...prev,
@@ -133,13 +132,21 @@ export default function Profile() {
     );
   };
   
-  
-
+  //Gemte bøger bliver gemt i AsynStorage for at det kan blive vist på profilsiden, eftersom de bliver gemt i Databasen fra Homepage.js
   useEffect(() => {
-    const unsubscribe = subscribeToAuthState(setUser, (userId) => {
-      fetchUserBooks(userId, setBooks);
-      fetchLikedBooks(userId, setLikedBooks);
-      fetchUserProfile(userId, setUserProfile);
+    const loadSavedBooks = async () => {
+      try {
+        // Hent gemte bøger fra AsyncStorage
+        const savedBooksData = await AsyncStorage.getItem("savedBooks");
+        if (savedBooksData) {
+          setLikedBooks(JSON.parse(savedBooksData)); // Opdater likedBooks state
+        }
+      } catch (error) {
+        console.error("Fejl ved indlæsning af gemte bøger:", error);
+      }
+    };
+    loadSavedBooks();
+  }, [user]); // Opdateres hver gang brugeren ændres
   
       // Load profile picture from AsyncStorage after login
       const loadProfilePicture = async () => {
@@ -152,12 +159,7 @@ export default function Profile() {
         }
       };
   
-      loadProfilePicture();
-    });
-  
-    return () => unsubscribe();
-  }, []);
-  
+      loadProfilePicture();  
 
   if (!user) {
     return (
@@ -212,7 +214,6 @@ export default function Profile() {
   return (
     <ScrollView style={globalStyles.container}>
       <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
-
       <View style={{ alignItems: "center", marginBottom: 20 }}>
         <Image
           source={
@@ -242,8 +243,10 @@ export default function Profile() {
         <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
       </TouchableOpacity>
 
+      <View style={globalStyles.separator} />
+
       <View style={globalStyles.sectionContainer}>
-        <Text style={globalStyles.heading}>Dine bøger:</Text>
+        <Text style={globalStyles.heading}>Dine annoncer</Text>
         <View style={globalStyles.gridContainer}>
           {books.map((book) => (
             <TouchableOpacity
@@ -261,26 +264,41 @@ export default function Profile() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <Text style={globalStyles.heading}>Dine likede bøger:</Text>
-        {/* <View style={globalStyles.gridContainer}>
-          {likedBooks.map((book) => (
-            <TouchableOpacity
-              key={book.id}
-              style={globalStyles.box}
-              onPress={() => console.log("Book selected:", book)}
-            >
-              <Text style={globalStyles.boxText}>{book.title}</Text>
-              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
-              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
-            </TouchableOpacity>
-          ))} */}
       </View>
+
+      <View style={globalStyles.separator} />
+
+      <View style={globalStyles.sectionContainer}>
+  <Text style={globalStyles.heading}>Dine gemte bøger</Text>
+  <View style={globalStyles.gridContainer}>
+    {likedBooks.map((book) => (
+      <TouchableOpacity
+        key={book.id}
+        style={globalStyles.box}
+        onPress={() => navigation.navigate("EditBook", { book })}>
+        <Image source={{ uri: book.imageUri }} style={globalStyles.bookImage} />
+        <Text style={globalStyles.boxText}>{book.title}</Text>
+        <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+        <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+</View>
+
+
+<View style={globalStyles.separator} />
+
+
+<View style={globalStyles.sectionContainer}>
+  <Text style={globalStyles.heading}>Bøger du følger</Text>
+  <View style={globalStyles.gridContainer}>
+  </View>
+</View>
+
 
       <TouchableOpacity
         style={globalStyles.logoutButton}
-        onPress={() => handleLogout(setUser)}
-      >
+        onPress={() => handleLogout(setUser)}>
         <Text style={globalStyles.logoutButtonText}>Log ud</Text>
       </TouchableOpacity>
     </ScrollView>

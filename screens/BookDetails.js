@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../FirebaseConfig";
 import { getDatabase, ref, update } from "firebase/database";
@@ -10,12 +10,16 @@ export default function BookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
 
   useEffect(() => {
-    setBook(route.params.book);
+    if (route.params && route.params.book) {
+      setBook(route.params.book);
+      if (route.params.book.sellerId) {
+      }
+    }
 
     // Cleanup function
     return () => {
-      setBook({});
-    };
+      setBook(null)
+    }
   }, [route.params.book]);
 
   if (!book) {
@@ -69,37 +73,38 @@ export default function BookDetails({ navigation, route }) {
 
   return (
     <ScrollView style={styles.container}>
-    <View style={styles.container}>
-            {/* Book image */}
-            {book.imageUri && (
-        <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-      )}
-      {/* Book details */}
-      {["title", "author", "year", "subject", "price", "university", "semester"].map((field, index) => (
-        <View style={styles.row} key={index}>
-          <Text style={styles.label}>
-            {field.charAt(0).toUpperCase() + field.slice(1)}:
-          </Text>
-          <Text style={styles.value}>{book[field]}</Text>
-        </View>
-      ))}
+      <View style={styles.container}>
+        {/* Book image */}
+        {book.imageUri && (
+          <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
+        )}
+        
+        {/* Book details */}
+        {["title", "author", "year", "subject", "price", "university", "semester"].map((field, index) => (
+          <View style={styles.row} key={index}>
+            <Text style={styles.label}>
+              {field.charAt(0).toUpperCase() + field.slice(1)}:
+            </Text>
+            <Text style={styles.value}>{book[field]}</Text>
+          </View>
+        ))}
 
-      {/* Buy button */}
-      <TouchableOpacity
-        style={styles.buyButton}
-        onPress={handlePurchase} // Check login before handling purchase
-      >
-        <Text style={styles.buyButtonText}>Køb bog</Text>
-      </TouchableOpacity>
+        {/* Buy button */}
+        <TouchableOpacity
+          style={styles.buyButton}
+          onPress={handlePurchase} // Check login before handling purchase
+        >
+          <Text style={styles.buyButtonText}>Køb bog</Text>
+        </TouchableOpacity>
 
-      {/* Write to seller */}
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={handleWriteToSeller} // Check login before navigating to Chat
-      >
-        <Text style={styles.chatButtonText}>Skriv til sælger</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Write to seller */}
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={handleWriteToSeller} // Check login before navigating to Chat
+        >
+          <Text style={styles.chatButtonText}>Skriv til sælger</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }

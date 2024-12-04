@@ -6,7 +6,6 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  StyleSheet,
   Image,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
@@ -280,8 +279,7 @@ export default function Homepage({ navigation }) {
                 name={book.liked ? "heart" : "heart-o"}
                 size={24}
                 color={book.liked ? "#FF0000" : "#000"}
-              />
-            
+              />  
             </TouchableOpacity>
             
           </View>
