@@ -7,8 +7,12 @@ import {
   TouchableOpacity,
   Button,
   TextInput,
+  Image,
+  ScrollView,
 } from "react-native";
-import { getDatabase, ref, update, remove } from "firebase/database";
+import {getDatabase, ref, update, remove } from "firebase/database";
+
+
 
 export default function EditBookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
@@ -98,7 +102,11 @@ export default function EditBookDetails({ navigation, route }) {
   }
 
   return (
+    <ScrollView style={styles.container}>
     <View style={styles.container}>
+      {book.imageUri && (
+      <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
+      )}
       {/* Editable input fields for book details */}
       {["title", "author", "year", "subject", "price"].map((field, index) => (
         <View style={styles.row} key={index}>
@@ -142,6 +150,7 @@ export default function EditBookDetails({ navigation, route }) {
         </TouchableOpacity>
       </View>
     </View>
+    </ScrollView>
   );
 }
 
@@ -206,5 +215,19 @@ const styles = StyleSheet.create({
   soldButtonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  bookImage: {
+    width: "100%",  
+    height: 300,                
+    marginTop: 10,
+    borderRadius: 15,
+    resizeMode: "cover",      
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2, 
+    shadowRadius: 10,
   },
 });

@@ -9,7 +9,7 @@ const globalStyles = StyleSheet.create({
     backgroundColor: '#F0F0E5', // Light background for the app
   },
   heading: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333', // Dark text for headings
     marginBottom: 10,
@@ -232,13 +232,6 @@ const globalStyles = StyleSheet.create({
       padding: 20,
       backgroundColor: "#F0F0E5", // Light background for the app
     },
-    heading: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: "#333", // Dark text for headings
-      marginBottom: 10,
-      textAlign: "center",
-    },
     text: {
       fontSize: 30,
       color: "#333",
@@ -303,6 +296,7 @@ const globalStyles = StyleSheet.create({
       borderRadius: 10,
       alignItems: "center",
       marginTop: 20,
+      marginBottom: 30,
     },
     logoutButtonText: {
       color: "#fff", // White text
@@ -341,7 +335,6 @@ const globalStyles = StyleSheet.create({
       marginBottom: 10,
       borderRadius: 5,
       padding: 10,
-      backgroundColor: "#f0f0f0",
       borderRadius: 10,
     },
     title: {
