@@ -12,7 +12,7 @@ import Chat from "./screens/Chat";
 import EditBook from "./screens/EditBook";
 import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
-import Points from "./screens/Points";
+import PointScreen from "./screens/PointScreen";
 
 // Creating navigators
 const Stack = createStackNavigator();
@@ -52,6 +52,7 @@ const ProfileStack = () => {
       <Stack.Screen name="EditBook" component={EditBook} />
       <Stack.Screen name="AddBook" component={AddBook} />
       <Stack.Screen name="Chat" component={Chat} />
+      <Stack.Screen name="PointScreen" component={PointScreen} />
     </Stack.Navigator>
   );
 };
