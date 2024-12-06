@@ -17,12 +17,10 @@ import {
   fetchUserProfile,
   fetchLikedBooks,
 } from "../screens/authFunctions";
-import { getDatabase, ref, update, onValue } from "firebase/database";
-import { getAuth } from "firebase/auth";
-import globalStyles from "../styles/globalStyles";
-import {useNavigation} from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import globalStyles from "../styles/globalStyles";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -33,6 +31,7 @@ export default function Profile() {
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [books, setBooks] = useState([]);
+  const [points, setPoints] = useState(0); // Points state
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -40,16 +39,42 @@ export default function Profile() {
       fetchUserBooks(userId, setBooks);
       fetchLikedBooks(userId, setLikedBooks);
       fetchUserProfile(userId, setUserProfile);
+      loadUserPoints(); // Load points from AsyncStorage
     });
     return () => unsubscribe();
   }, []);
 
   const handleAddBook = () => {
     navigation.navigate("AddBook");
+    handleAddPoint(); // Add point when a new book is added
   };
 
+  const loadUserPoints = async () => {
+    try {
+      const storedPoints = await AsyncStorage.getItem("userPoints");
+      if (storedPoints) {
+        setPoints(parseInt(storedPoints, 10)); // Parse to integer
+      }
+    } catch (error) {
+      console.error("Error loading points:", error);
+    }
+  };
 
-  //Funktionen for profilbillede som bliver gemt i AsyncStorage
+  const updateUserPoints = async (newPoints) => {
+    try {
+      setPoints(newPoints);
+      await AsyncStorage.setItem("userPoints", newPoints.toString());
+    } catch (error) {
+      console.error("Error updating points:", error);
+    }
+  };
+
+  const handleAddPoint = () => {
+    const newPoints = points + 1; // Increment points
+    updateUserPoints(newPoints);
+  };
+
+  // Function for profile image upload
   const handleUploadPicture = async () => {
     Alert.alert(
       "Vælg kilde",
@@ -75,7 +100,7 @@ export default function Profile() {
                 return;
               }
               const imageUri = result.assets[0].uri;
-              // Billedet bliver gemt i Async
+              // Billedet bliver gemt i AsyncStorage
               await AsyncStorage.setItem("profilePicture", imageUri);
               Alert.alert("Success", "Profilbillede opdateret!");
               setUserProfile((prev) => ({
@@ -131,35 +156,19 @@ export default function Profile() {
       { cancelable: true }
     );
   };
-  
-  //Gemte bøger bliver gemt i AsynStorage for at det kan blive vist på profilsiden, eftersom de bliver gemt i Databasen fra Homepage.js
-  useEffect(() => {
-    const loadSavedBooks = async () => {
-      try {
-        // Hent gemte bøger fra AsyncStorage
-        const savedBooksData = await AsyncStorage.getItem("savedBooks");
-        if (savedBooksData) {
-          setLikedBooks(JSON.parse(savedBooksData)); // Opdater likedBooks state
-        }
-      } catch (error) {
-        console.error("Fejl ved indlæsning af gemte bøger:", error);
-      }
-    };
-    loadSavedBooks();
-  }, [user]); // Opdateres hver gang brugeren ændres
-  
-      // Load profile picture from AsyncStorage after login
-      const loadProfilePicture = async () => {
-        const storedProfilePicture = await AsyncStorage.getItem("profilePicture");
-        if (storedProfilePicture) {
-          setUserProfile((prev) => ({
-            ...prev,
-            profilePicture: storedProfilePicture,
-          }));
-        }
-      };
-  
-      loadProfilePicture();  
+
+  // Load profile picture from AsyncStorage after login
+  const loadProfilePicture = async () => {
+    const storedProfilePicture = await AsyncStorage.getItem("profilePicture");
+    if (storedProfilePicture) {
+      setUserProfile((prev) => ({
+        ...prev,
+        profilePicture: storedProfilePicture,
+      }));
+    }
+  };
+
+  loadProfilePicture();
 
   if (!user) {
     return (
@@ -203,9 +212,7 @@ export default function Profile() {
           style={globalStyles.createAccountButton}
           onPress={() => handleCreateAccount(createEmail, createPassword)}
         >
-          <Text style={globalStyles.createAccountButtonText}>
-            Create Account
-          </Text>
+          <Text style={globalStyles.createAccountButtonText}>Create Account</Text>
         </TouchableOpacity>
       </View>
     );
@@ -213,30 +220,59 @@ export default function Profile() {
 
   return (
     <ScrollView style={globalStyles.container}>
-      <Text style={globalStyles.heading}>Velkommen, {user.email}</Text>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
-        <Image
-          source={
-            userProfile?.profilePicture
-              ? { uri: userProfile.profilePicture }
-              : require("../assets/default-profile.png")
-          }
-          style={{
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            marginBottom: 10,
-          }}
-        />
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}>
+          {/* Profile picture and points */}
+          <View>
+            <Image
+              source={
+                userProfile?.profilePicture
+                  ? { uri: userProfile.profilePicture }
+                  : require("../assets/default-profile.png")
+              }
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: 45,
+                marginRight: 10,
+                borderWidth: 3,
+              }}
+            />
+          </View>
+          <View>
+            <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 5 }}>
+              Velkommen
+            </Text>
+            <Text style={{ fontSize: 18, color: "#757575" }}>{user.email}</Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginTop: 10,
+                backgroundColor: "#DB8D16",
+                borderRadius: 20,
+                paddingVertical: 5,
+                paddingHorizontal: 25,
+                color: "#FFF",
+              }}
+            >
+              {points} point
+            </Text>
+          </View>
+        </View>
         <TouchableOpacity
           onPress={handleUploadPicture}
-          style={globalStyles.loginButton}
+          style={{
+            backgroundColor: "#156056", // Green button for upload
+            paddingVertical: 10,
+            paddingHorizontal: 40,
+            borderRadius: 25,
+            marginTop: 20,
+          }}
         >
-          <Text style={globalStyles.loginButtonText}>Upload Profilbillede</Text>
+          <Text style={{ color: "#FFF", fontSize: 16 }}>Upload Profilbillede</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={globalStyles.separator} />
 
       {/* Add Book Button */}
       <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>
@@ -269,36 +305,37 @@ export default function Profile() {
       <View style={globalStyles.separator} />
 
       <View style={globalStyles.sectionContainer}>
-  <Text style={globalStyles.heading}>Dine gemte bøger</Text>
-  <View style={globalStyles.gridContainer}>
-    {likedBooks.map((book) => (
-      <TouchableOpacity
-        key={book.id}
-        style={globalStyles.box}
-        onPress={() => navigation.navigate("EditBook", { book })}>
-        <Image source={{ uri: book.imageUri }} style={globalStyles.bookImage} />
-        <Text style={globalStyles.boxText}>{book.title}</Text>
-        <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
-        <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-</View>
+        <Text style={globalStyles.heading}>Dine gemte bøger</Text>
+        <View style={globalStyles.gridContainer}>
+          {likedBooks.map((book) => (
+            <TouchableOpacity
+              key={book.id}
+              style={globalStyles.box}
+              onPress={() => navigation.navigate("EditBook", { book })}
+            >
+              <Image
+                source={{ uri: book.imageUri }}
+                style={globalStyles.bookImage}
+              />
+              <Text style={globalStyles.boxText}>{book.title}</Text>
+              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
+      <View style={globalStyles.separator} />
 
-<View style={globalStyles.separator} />
-
-
-<View style={globalStyles.sectionContainer}>
-  <Text style={globalStyles.heading}>Bøger du følger</Text>
-  <View style={globalStyles.gridContainer}>
-  </View>
-</View>
-
+      <View style={globalStyles.sectionContainer}>
+        <Text style={globalStyles.heading}>Bøger du følger</Text>
+        <View style={globalStyles.gridContainer}></View>
+      </View>
 
       <TouchableOpacity
         style={globalStyles.logoutButton}
-        onPress={() => handleLogout(setUser)}>
+        onPress={() => handleLogout(setUser)}
+      >
         <Text style={globalStyles.logoutButtonText}>Log ud</Text>
       </TouchableOpacity>
     </ScrollView>

@@ -11,7 +11,6 @@ import BookDetails from "./screens/BookDetails";
 import Chat from "./screens/Chat";
 import EditBook from "./screens/EditBook";
 import Homepage from "./screens/Homepage";
-import Login from "./screens/Login";
 import Profile from "./screens/Profile";
 import Points from "./screens/Points";
 
