@@ -16,11 +16,12 @@ import {
   fetchUserBooks,
   fetchUserProfile,
   fetchLikedBooks,
-} from "../screens/authFunctions";
+} from "./authFunctions";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyles from "../styles/globalStyles";
+import PointScreen from "./PointScreen";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -46,18 +47,37 @@ export default function Profile() {
 
   const handleAddBook = () => {
     navigation.navigate("AddBook");
-    handleAddPoint(); // Add point when a new book is added
+    handleAddPoint();
   };
 
-  const loadUserPoints = async () => {
-    try {
-      const storedPoints = await AsyncStorage.getItem("userPoints");
-      if (storedPoints) {
-        setPoints(parseInt(storedPoints, 10)); // Parse to integer
+  // const loadUserPoints = async () => {
+  //   try {
+  //     const storedPoints = await AsyncStorage.getItem("userPoints");
+  //     if (storedPoints) {
+  //       setPoints(parseInt(storedPoints, 10)); // Parse to integer
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading points:", error);
+  //   }
+  // };
+  const loadUserPoints = (userId) => {
+    const db = getDatabase();
+    const userRef = ref(db, `Users/${userId}`);
+
+    onValue(
+      userRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.points !== undefined) {
+          setPoints(data.points); // Update state with points from the database
+        } else {
+          console.log("No points found for this user.");
+        }
+      },
+      (error) => {
+        console.error("Error loading points:", error);
       }
-    } catch (error) {
-      console.error("Error loading points:", error);
-    }
+    );
   };
 
   const updateUserPoints = async (newPoints) => {
@@ -83,10 +103,14 @@ export default function Profile() {
         {
           text: "Kamera",
           onPress: async () => {
-            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-  
+            const permissionResult =
+              await ImagePicker.requestCameraPermissionsAsync();
+
             if (!permissionResult.granted) {
-              Alert.alert("Tilladelse påkrævet", "Tilladelse til kamera er nødvendig.");
+              Alert.alert(
+                "Tilladelse påkrævet",
+                "Tilladelse til kamera er nødvendig."
+              );
               return;
             }
             try {
@@ -116,13 +140,17 @@ export default function Profile() {
         {
           text: "Galleri",
           onPress: async () => {
-            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
+            const permissionResult =
+              await ImagePicker.requestMediaLibraryPermissionsAsync();
+
             if (!permissionResult.granted) {
-              Alert.alert("Tilladelse påkrævet", "Tilladelse til galleri er nødvendig.");
+              Alert.alert(
+                "Tilladelse påkrævet",
+                "Tilladelse til galleri er nødvendig."
+              );
               return;
             }
-  
+
             try {
               const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -130,16 +158,16 @@ export default function Profile() {
                 aspect: [1, 1],
                 quality: 0.5,
               });
-  
+
               if (result.canceled) {
                 Alert.alert("Handling annulleret", "Ingen billede blev valgt.");
                 return;
               }
-  
+
               const imageUri = result.assets[0].uri;
               // Directly store the image URI in AsyncStorage
               await AsyncStorage.setItem("profilePicture", imageUri);
-  
+
               Alert.alert("Success", "Profilbillede opdateret!");
               setUserProfile((prev) => ({
                 ...prev,
@@ -212,7 +240,9 @@ export default function Profile() {
           style={globalStyles.createAccountButton}
           onPress={() => handleCreateAccount(createEmail, createPassword)}
         >
-          <Text style={globalStyles.createAccountButtonText}>Create Account</Text>
+          <Text style={globalStyles.createAccountButtonText}>
+            Create Account
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -221,7 +251,9 @@ export default function Profile() {
   return (
     <ScrollView style={globalStyles.container}>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}>
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}
+        >
           {/* Profile picture and points */}
           <View>
             <Image
@@ -244,33 +276,45 @@ export default function Profile() {
               Velkommen
             </Text>
             <Text style={{ fontSize: 18, color: "#757575" }}>{user.email}</Text>
-            <Text
+
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("PointScreen", { points });
+              }}
               style={{
-                fontSize: 18,
-                fontWeight: "bold",
                 marginTop: 10,
                 backgroundColor: "#DB8D16",
                 borderRadius: 20,
                 paddingVertical: 5,
                 paddingHorizontal: 25,
-                color: "#FFF",
               }}
             >
-              {points} point
-            </Text>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: "#FFF",
+                  textAlign: "center",
+                }}
+              >
+                {points} point
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
         <TouchableOpacity
           onPress={handleUploadPicture}
           style={{
-            backgroundColor: "#156056", // Green button for upload
+            backgroundColor: "#156056",
             paddingVertical: 10,
             paddingHorizontal: 40,
             borderRadius: 25,
             marginTop: 20,
           }}
         >
-          <Text style={{ color: "#FFF", fontSize: 16 }}>Upload Profilbillede</Text>
+          <Text style={{ color: "#FFF", fontSize: 16 }}>
+            Upload Profilbillede
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -278,7 +322,6 @@ export default function Profile() {
       <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>
         <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
       </TouchableOpacity>
-
       <View style={globalStyles.separator} />
 
       <View style={globalStyles.sectionContainer}>
