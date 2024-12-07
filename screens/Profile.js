@@ -6,186 +6,84 @@ import {
   TextInput,
   Image,
   Alert,
+  FlatList,
   ScrollView,
 } from "react-native";
-import {
-  handleLogin,
-  handleCreateAccount,
-  handleLogout,
-  subscribeToAuthState,
-  fetchUserBooks,
-  fetchUserProfile,
-  fetchLikedBooks,
-} from "./authFunctions";
 import { useNavigation } from "@react-navigation/native";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import { getDatabase, ref, onValue } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyles from "../styles/globalStyles";
-import PointScreen from "./PointScreen";
+import { auth } from "../FirebaseConfig"; // Import Firebase auth
 
 export default function Profile() {
   const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useState({});
+  const [books, setBooks] = useState([]);
   const [likedBooks, setLikedBooks] = useState([]);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
-  const [books, setBooks] = useState([]);
-  const [points, setPoints] = useState(0); // Points state
+  const [points, setPoints] = useState(0);
+  const [userProfile, setUserProfile] = useState({});
   const navigation = useNavigation();
 
+  // Check auth state and fetch user data
   useEffect(() => {
-    const unsubscribe = subscribeToAuthState(setUser, (userId) => {
-      fetchUserBooks(userId, setBooks);
-      fetchLikedBooks(userId, setLikedBooks);
-      fetchUserProfile(userId, setUserProfile);
-      loadUserPoints(); // Load points from AsyncStorage
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        fetchUserBooks(currentUser.uid);
+        fetchUserPoints(currentUser.uid);
+        fetchLikedBooks(currentUser.uid); // Fetch liked books
+        loadProfilePicture();
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  const handleAddBook = () => {
-    navigation.navigate("AddBook");
-    handleAddPoint();
-  };
-
-  // const loadUserPoints = async () => {
-  //   try {
-  //     const storedPoints = await AsyncStorage.getItem("userPoints");
-  //     if (storedPoints) {
-  //       setPoints(parseInt(storedPoints, 10)); // Parse to integer
-  //     }
-  //   } catch (error) {
-  //     console.error("Error loading points:", error);
-  //   }
-  // };
-  const loadUserPoints = (userId) => {
+  // Fetch user's books
+  const fetchUserBooks = (userId) => {
     const db = getDatabase();
-    const userRef = ref(db, `Users/${userId}`);
-
+    const booksRef = ref(db, "Books");
     onValue(
-      userRef,
+      booksRef,
       (snapshot) => {
         const data = snapshot.val();
-        if (data && data.points !== undefined) {
-          setPoints(data.points); // Update state with points from the database
-        } else {
-          console.log("No points found for this user.");
+        if (data) {
+          const booksList = Object.entries(data)
+            .map(([key, value]) => ({ id: key, ...value }))
+            .filter((book) => book.sellerId === userId);
+          setBooks(booksList);
         }
       },
       (error) => {
-        console.error("Error loading points:", error);
+        console.error("Error fetching books:", error);
       }
     );
   };
 
-  const updateUserPoints = async (newPoints) => {
-    try {
-      setPoints(newPoints);
-      await AsyncStorage.setItem("userPoints", newPoints.toString());
-    } catch (error) {
-      console.error("Error updating points:", error);
-    }
-  };
-
-  const handleAddPoint = () => {
-    const newPoints = points + 1; // Increment points
-    updateUserPoints(newPoints);
-  };
-
-  // Function for profile image upload
-  const handleUploadPicture = async () => {
-    Alert.alert(
-      "Vælg kilde",
-      "Hvor vil du uploade dit billede fra?",
-      [
-        {
-          text: "Kamera",
-          onPress: async () => {
-            const permissionResult =
-              await ImagePicker.requestCameraPermissionsAsync();
-
-            if (!permissionResult.granted) {
-              Alert.alert(
-                "Tilladelse påkrævet",
-                "Tilladelse til kamera er nødvendig."
-              );
-              return;
-            }
-            try {
-              const result = await ImagePicker.launchCameraAsync({
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.5,
-              });
-              if (result.canceled) {
-                Alert.alert("Handling annulleret", "Ingen billede blev taget.");
-                return;
-              }
-              const imageUri = result.assets[0].uri;
-              // Billedet bliver gemt i AsyncStorage
-              await AsyncStorage.setItem("profilePicture", imageUri);
-              Alert.alert("Success", "Profilbillede opdateret!");
-              setUserProfile((prev) => ({
-                ...prev,
-                profilePicture: imageUri,
-              }));
-            } catch (error) {
-              console.error("Fejl under upload:", error);
-              Alert.alert("Fejl", "Kunne ikke opdatere profilbillede.");
-            }
-          },
-        },
-        {
-          text: "Galleri",
-          onPress: async () => {
-            const permissionResult =
-              await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-            if (!permissionResult.granted) {
-              Alert.alert(
-                "Tilladelse påkrævet",
-                "Tilladelse til galleri er nødvendig."
-              );
-              return;
-            }
-
-            try {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.5,
-              });
-
-              if (result.canceled) {
-                Alert.alert("Handling annulleret", "Ingen billede blev valgt.");
-                return;
-              }
-
-              const imageUri = result.assets[0].uri;
-              // Directly store the image URI in AsyncStorage
-              await AsyncStorage.setItem("profilePicture", imageUri);
-
-              Alert.alert("Success", "Profilbillede opdateret!");
-              setUserProfile((prev) => ({
-                ...prev,
-                profilePicture: imageUri,
-              }));
-            } catch (error) {
-              console.error("Fejl under upload:", error);
-              Alert.alert("Fejl", "Kunne ikke opdatere profilbillede.");
-            }
-          },
-        },
-        { text: "Annuller", style: "cancel" },
-      ],
-      { cancelable: true }
+  // Fetch user's points
+  const fetchUserPoints = (userId) => {
+    const db = getDatabase();
+    const userRef = ref(db, `Users/${userId}`);
+    onValue(
+      userRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        setPoints(data?.points || 0);
+      },
+      (error) => console.error("Error fetching points:", error)
     );
   };
 
-  // Load profile picture from AsyncStorage after login
+  // Load profile picture
   const loadProfilePicture = async () => {
     const storedProfilePicture = await AsyncStorage.getItem("profilePicture");
     if (storedProfilePicture) {
@@ -196,8 +94,77 @@ export default function Profile() {
     }
   };
 
-  loadProfilePicture();
+  // Handle profile picture upload
+  const handleUploadPicture = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
 
+    if (!result.canceled) {
+      const imageUri = result.assets[0].uri;
+      await AsyncStorage.setItem("profilePicture", imageUri);
+      setUserProfile((prev) => ({
+        ...prev,
+        profilePicture: imageUri,
+      }));
+    }
+  };
+
+  // Handle login
+  const handleLogin = () => {
+    signInWithEmailAndPassword(auth, loginEmail, loginPassword)
+      .then(() => Alert.alert("Success", "Logged in successfully!"))
+      .catch((error) => Alert.alert("Error", error.message));
+  };
+
+  // Handle account creation
+  const handleCreateAccount = () => {
+    createUserWithEmailAndPassword(auth, createEmail, createPassword)
+      .then(() => Alert.alert("Success", "Account created successfully!"))
+      .catch((error) => Alert.alert("Error", error.message));
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        setUser(null);
+        Alert.alert("Success", "Logged out successfully!");
+      })
+      .catch((error) => Alert.alert("Error", error.message));
+  };
+
+  // Add new book
+  const handleAddBook = () => {
+    navigation.navigate("AddBook");
+  };
+
+  // Fetch user's liked books
+  const fetchLikedBooks = (userId) => {
+    const db = getDatabase();
+    const likedBooksRef = ref(db, `LikedBooks/${userId}`);
+    onValue(
+      likedBooksRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const likedBooksList = Object.entries(data).map(([key, value]) => ({
+            id: key,
+            ...value,
+          }));
+          setLikedBooks(likedBooksList);
+        } else {
+          setLikedBooks([]); // Reset if no liked books
+        }
+      },
+      (error) => console.error("Error fetching liked books:", error)
+    );
+  };
+
+
+  /* ==================== Login ==================== */
   if (!user) {
     return (
       <View style={globalStyles.container}>
@@ -217,7 +184,7 @@ export default function Profile() {
         />
         <TouchableOpacity
           style={globalStyles.loginButton}
-          onPress={() => handleLogin(loginEmail, loginPassword, setUser)}
+          onPress={handleLogin}
         >
           <Text style={globalStyles.loginButtonText}>Login</Text>
         </TouchableOpacity>
@@ -238,7 +205,7 @@ export default function Profile() {
         />
         <TouchableOpacity
           style={globalStyles.createAccountButton}
-          onPress={() => handleCreateAccount(createEmail, createPassword)}
+          onPress={handleCreateAccount}
         >
           <Text style={globalStyles.createAccountButtonText}>
             Create Account
@@ -322,7 +289,10 @@ export default function Profile() {
       <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>
         <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
       </TouchableOpacity>
+
       <View style={globalStyles.separator} />
+
+      {/* ==================== MyBooks ==================== */}
 
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine annoncer</Text>
@@ -332,6 +302,31 @@ export default function Profile() {
               key={book.id}
               style={globalStyles.box}
               onPress={() => navigation.navigate("EditBook", { book })}
+            >
+              <Image
+                source={{ uri: book.imageUri }}
+                style={globalStyles.bookImage}
+              />
+              <Text style={globalStyles.boxText}>{book.title}</Text>
+              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={globalStyles.separator} />
+
+      {/* ==================== liked books ==================== */}
+
+      <View style={globalStyles.sectionContainer}>
+        <Text style={globalStyles.heading}>Dine likede bøger</Text>
+        <View style={globalStyles.gridContainer}>
+          {likedBooks.map((book) => (
+            <TouchableOpacity
+              key={book.id}
+              style={globalStyles.box}
+              onPress={() => navigation.navigate("BookDetails", { book })} // Adjust navigation as needed
             >
               <Image
                 source={{ uri: book.imageUri }}
