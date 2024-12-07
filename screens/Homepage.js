@@ -1,3 +1,4 @@
+// import all the necessary libraries
 import React, { useState, useEffect } from "react";
 import {
   Text,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  Button,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import { FontAwesome } from "@expo/vector-icons";
@@ -15,35 +17,53 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../FirebaseConfig";
 
 export default function Homepage({ navigation }) {
+  // Declare the necessary state variables
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [dropdowns, setDropdowns] = useState({
     university: false,
     programme: false,
-    semester: false,
     subject: false,
   });
   const [filters, setFilters] = useState({
     university: "",
     programme: "",
-    semester: "",
     subject: "",
   });
   const [user, setUser] = useState(null);
 
+  // CHECKS if the user is logged in: Listen for changes in the user state to check if the user is logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Define the options for the dropdowns
   const options = {
-    university: ["Copenhagen Business School", "Københavns Universitet"],
-    programme: ["HA (it.)", "HA (alm)", "Økonomi", "Psykologi"],
-    semester: ["1. semester", "2. semester", "3. semester"],
-    subject: ["Finansiering", "Organisationsteori", "BIS"],
+    university: ["Copenhagen Business School"],
+    programme: [
+      "HA (it.) | 1.semester",
+      "HA (it.) | 3.semester",
+      "HA (it.) | 5.semester",
+    ],
+    subject: [
+      "Finansiering",
+      "Organisationsteori",
+      "BIS",
+      "Innovation og ny teknologi",
+    ],
   };
 
+  // Fetch the books from the database and listen for updates
   useEffect(() => {
     const db = getDatabase();
     const booksRef = ref(db, "Books");
 
-    const unsubscribe = onValue(
+    // Listen for book updates in the database
+    const listenToBookUpdates = onValue(
       booksRef,
       (snapshot) => {
         const data = snapshot.val();
@@ -63,20 +83,17 @@ export default function Homepage({ navigation }) {
       (error) => console.error("Error fetching data: ", error)
     );
 
-    return () => unsubscribe();
+    // Cleanup the listener when the component unmounts to prevent memory leaks
+    return () => listenToBookUpdates();
   }, []);
 
+  // SEARCH AND FILTER FUNCTION:
+  //Apply the search and filters whenever the search or filters change
   useEffect(() => {
     applySearchAndFilters();
   }, [filters, search]);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
+  // Apply search and filters to the book list
   const applySearchAndFilters = () => {
     if (!books.length) return;
 
@@ -86,7 +103,8 @@ export default function Homepage({ navigation }) {
       filtered = filtered.filter(
         (book) =>
           book.title?.toLowerCase().includes(search.toLowerCase()) ||
-          book.author?.toLowerCase().includes(search.toLowerCase())
+          book.author?.toLowerCase().includes(search.toLowerCase()) ||
+          book.subject?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -95,13 +113,11 @@ export default function Homepage({ navigation }) {
         (book) => book.university === filters.university
       );
     }
+
     if (filters.programme) {
       filtered = filtered.filter(
         (book) => book.programme === filters.programme
       );
-    }
-    if (filters.semester) {
-      filtered = filtered.filter((book) => book.semester === filters.semester);
     }
     if (filters.subject) {
       filtered = filtered.filter((book) => book.subject === filters.subject);
@@ -110,26 +126,29 @@ export default function Homepage({ navigation }) {
     setFilteredBooks(filtered);
   };
 
+  // Toggle the dropdown menu visibility
   const toggleDropdown = (field) => {
     setDropdowns((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  // Handle changes to filters
   const handleFilterChange = (field, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [field]: value }));
     setDropdowns((prev) => ({ ...prev, [field]: false }));
   };
 
+  // Reset all filters and search
   const handleResetFilters = () => {
     setFilters({
       university: "",
       programme: "",
-      semester: "",
       subject: "",
     });
     setSearch("");
     setFilteredBooks(books);
   };
 
+  // Handle the selection of a book to view its details
   const handleSelectBook = (id) => {
     const selectedBook = filteredBooks.find((book) => book.id === id);
     if (selectedBook) {
@@ -139,16 +158,17 @@ export default function Homepage({ navigation }) {
     }
   };
 
+  // Toggle the 'like' status of a book
   const toggleLike = (id) => {
     if (!user) {
-      // Hvis brugeren ikke er logget ind
+      // If the user is not logged in, show an alert
       Alert.alert(
         "Login påkrævet",
         "Du skal være logget ind for at like en bog.",
         [
           {
             text: "Gå til login",
-            onPress: () => navigation.navigate("Profile"),
+            onPress: () => navigation.navigate("Profil", { screen: "Profile" }),
           },
         ]
       );
@@ -177,12 +197,25 @@ export default function Homepage({ navigation }) {
     setFilteredBooks(updatedBooks);
   };
 
+  // Display a loading message if there are no books
   if (books.length === 0) {
     return <Text>Loading books...</Text>;
   }
 
+  // Display a message if no books match the filters
   if (filteredBooks.length === 0) {
-    return <Text>No books match the filters.</Text>;
+    return (
+      <View style={{ alignItems: "center", marginTop: 20 }}>
+        <Text>Ingen bøger matcher din søgning.</Text>
+        <Button
+          title="Tilbage"
+          onPress={() => {
+            // Reset your filters here
+            setFilters({ title: "", author: "" });
+          }}
+        />
+      </View>
+    );
   }
 
   return (
@@ -205,11 +238,11 @@ export default function Homepage({ navigation }) {
       <View style={globalStyles.filterBox}>
         <TextInput
           style={globalStyles.searchInput}
-          placeholder="Search by title or author"
+          placeholder="Søg efter titel eller forfatter"
           value={search}
           onChangeText={setSearch}
         />
-        <Text style={globalStyles.filterByText}>Filter by:</Text>
+        <Text style={globalStyles.filterByText}>Filtrér efter:</Text>
 
         {Object.keys(options).map((field) => (
           <View
@@ -224,7 +257,7 @@ export default function Homepage({ navigation }) {
               onPress={() => toggleDropdown(field)}
             >
               <Text style={globalStyles.dropdownButtonText}>
-                {filters[field] || `Select ${field}`}
+                {filters[field] || `Vælg ${field}`}
               </Text>
             </TouchableOpacity>
             {dropdowns[field] && (
@@ -251,40 +284,39 @@ export default function Homepage({ navigation }) {
           style={globalStyles.resetButton}
           onPress={handleResetFilters}
         >
-          <Text style={globalStyles.resetButtonText}>Reset Filters</Text>
+          <Text style={globalStyles.resetButtonText}>Nulstil filter</Text>
         </TouchableOpacity>
       </View>
 
       <View style={globalStyles.separator} />
 
-      <Text style={globalStyles.title}>Udforsk bøger her</Text> 
+      <Text style={globalStyles.title}>Udforsk bøger her</Text>
 
       <View style={globalStyles.sectionContainer}>
-      <View style={globalStyles.gridContainers}>
-        {filteredBooks.map((book) => (
-          <View key={book.id} style={globalStyles.box}>
-            <Image
-            source={{ uri: book.imageUri  }} // Adjust this to match your Firebase image key
-            style={globalStyles.bookImage}
-            />  
-            <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
-              <Text style={globalStyles.boxText}>{book.title}</Text>
-              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
-              <Text style={globalStyles.boxTextSmall}>
-                {book.subject || "No subject"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => toggleLike(book.id)}>
-              <FontAwesome
-                name={book.liked ? "heart" : "heart-o"}
-                size={24}
-                color={book.liked ? "#FF0000" : "#000"}
-              />  
-            </TouchableOpacity>
-            
-          </View>
-        ))}
-      </View>
+        <View style={globalStyles.gridContainers}>
+          {filteredBooks.map((book) => (
+            <View key={book.id} style={globalStyles.box}>
+              <Image
+                source={{ uri: book.imageUri }} // Adjust this to match your Firebase image key
+                style={globalStyles.bookImage}
+              />
+              <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
+                <Text style={globalStyles.boxText}>{book.title}</Text>
+                <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+                <Text style={globalStyles.boxTextSmall}>
+                  {book.subject || "No subject"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => toggleLike(book.id)}>
+                <FontAwesome
+                  name={book.liked ? "heart" : "heart-o"}
+                  size={24}
+                  color={book.liked ? "#FF0000" : "#000"}
+                />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );
