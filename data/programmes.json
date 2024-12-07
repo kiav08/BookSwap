@@ -1,0 +1,81 @@
+{
+  "programmes": {
+    "HA(it.) / 1. semester": [
+      {
+        "title": "Hvordan organisationer fungerer",
+        "author": "Jacobsen and Thorsvik",
+        "subject": "Indføring i organisationers obygning og funktion"
+      },
+      {
+        "title": "Organisationers form og funktion",
+        "author": "Sørensen",
+        "subject": "Indføring i organisationers obygning og funktion"
+      },
+      {
+        "title": "Kultur i organisationer",
+        "author": "Schultz",
+        "subject": "Indføring i organisationers obygning og funktion"
+      },
+      {
+        "title": "Business information systems",
+        "author": "Bojic and Greasley andHickie",
+        "subject": "Introduction to information systems"
+      },
+      {
+        "title": "Eloquent Javascript",
+        "author": "Haverbeke",
+        "subject": "Programming og udvikling af små systemer og databaser"
+      },
+
+      {
+        "title": "Managerial economics",
+        "author": "Bentzen and Scheibye and Hirschey",
+        "subject": "Microøkonomi"
+      }
+    ],
+    "HA(it.) / 3. semester": [
+      {
+        "title": "Macroeconomics",
+        "author": "Blanchard",
+        "subject": "Makroøkonomi"
+      },
+      {
+        "title": "Fundamentals of corporate finance",
+        "author": "Hillier and Ross and Westerfield and Jordan",
+        "subject": "Finansiering"
+      }
+    ],
+    "HA(it.) / 5. semester": [
+      { 
+        "title": "Accounting for decision making and control",
+        "author": "Zimmerman",
+        "subject": "Den beslutnings og styringsorienterede økonomistyring"
+      },
+      {
+        "title": "The Lean Startup",
+        "author": "Ries",
+        "subject": "Innovation og ny teknologi"
+      },
+      {
+        "title": "AI: Mellem fornuft og følelse",
+        "author": "Damsgaard",
+        "subject": "Innovation og ny teknologi"
+      },
+      {
+        "title": "Blockchain business: Ægte, sporbart og uerstatteligt",
+        "author": "Damsgaard",
+        "subject": "Innovation og ny teknologi"
+      },
+      {
+        "title": "ADen digitale omstilling: 9 radikale udforinger erhvervslivet skal overleve",
+        "author": "Damsgaard",
+        "subject": "Innovation og ny teknologi"
+      },
+      {
+        "title": "Bestyrelsens digitale kompetencer",
+        "author": "Damsgaard",
+        "subject": "Innovation og ny teknologi"
+      }
+    ]
+  }
+}

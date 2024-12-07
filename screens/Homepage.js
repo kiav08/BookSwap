@@ -15,6 +15,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import globalStyles from "../styles/globalStyles";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../FirebaseConfig";
+import programmeData from "../data/programmes.json";
 
 export default function Homepage({ navigation }) {
   // Declare the necessary state variables
@@ -44,15 +45,11 @@ export default function Homepage({ navigation }) {
   // Define the options for the dropdowns
   const options = {
     university: ["Copenhagen Business School"],
-    programme: [
-      "HA (it.) | 1.semester",
-      "HA (it.) | 3.semester",
-      "HA (it.) | 5.semester",
-    ],
+    programme: Object.keys(programmeData.programmes), // Use the keys of the programme data as options
     subject: [
       "Finansiering",
-      "Organisationsteori",
-      "BIS",
+      "Indføring i organisationers opbygning og funktion",
+      "Introduction to information systems",
       "Innovation og ny teknologi",
     ],
   };
@@ -108,17 +105,27 @@ export default function Homepage({ navigation }) {
       );
     }
 
+    // Filter by university -- this is a mock filter
     if (filters.university) {
       filtered = filtered.filter(
         (book) => book.university === filters.university
       );
     }
 
+    // Filter by programme
     if (filters.programme) {
-      filtered = filtered.filter(
-        (book) => book.programme === filters.programme
+      const programmeBooks = programmeData.programmes[filters.programme] || [];
+      filtered = filtered.filter((book) =>
+        programmeBooks.some((pBook) => {
+          return (
+            pBook.title.toLowerCase() === book.title?.toLowerCase() || // Match by title
+            (pBook.author &&
+              pBook.author.toLowerCase() === book.author?.toLowerCase()) // Match by author
+          );
+        })
       );
     }
+
     if (filters.subject) {
       filtered = filtered.filter((book) => book.subject === filters.subject);
     }
