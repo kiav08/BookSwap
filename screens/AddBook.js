@@ -46,7 +46,11 @@ export default function AddBook() {
     year: "",
     subject: "",
     price: "",
+    location: "",
+    university: "",
+    semester: "",
   };
+
 
   const [NewBook, setNewBook] = useState(initialState);
   const [imageUri, setImageUri] = useState(null);
@@ -81,14 +85,18 @@ export default function AddBook() {
   /* ============ HANDLE SAVE FUNCTION ============ */
   // Function to save the new book to Firebase
   const handleSave = async () => {
-    const { title, author, year, subject, price } = NewBook;
+    const { title, author, year, subject, price, location, university, semester} = NewBook;
 
     if (
       title.length === 0 ||
       author.length === 0 ||
       year.length === 0 ||
       subject.length === 0 ||
-      price.length === 0
+      price.length === 0 ||
+      location.length === 0 ||
+      university.length === 0 ||
+      semester.length === 0
+
     ) {
       return Alert.alert("Error", "All fields must be filled.");
     }

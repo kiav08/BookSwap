@@ -4,28 +4,65 @@ import { auth } from "../FirebaseConfig";
 import { getDatabase, ref, update } from "firebase/database";
 import { ScrollView } from "react-native";
 import { Image } from 'react-native';
+import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
+import * as Location from 'expo-location';  // Import Expo's Location API for geocoding
+
 
 
 /* ========== BOOKDETAILS FUNCTION ========== */
 // Function to display book details when the user clicks on a book
 export default function BookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
 
+  // Funktion til at få latitude og longitude fra en location string (f.eks. København)
+  const getLocationCoordinates = async (location) => {
+    try {
+      // Geokodning af placeringen
+      const geocode = await Location.geocodeAsync(location);  // Brug Expo's geokodning API
+      if (geocode.length > 0) {
+        const { latitude, longitude } = geocode[0];  // Hent første resultat
+        return { latitude, longitude };
+      } else {
+        console.error("Location kunne ikke geokodes.");
+        return null;
+      }
+    } catch (error) {
+      console.error("Fejl ved geokodning:", error);
+      return null;
+    }
+  };
+
+  // Fetch coordinates when book changes or component mounts
   useEffect(() => {
     if (route.params && route.params.book) {
-      setBook(route.params.book);
-      if (route.params.book.sellerId) {
-      }
+      setBook(route.params.book); // Set book data from route params
     }
+  }, [route.params]);
 
-    // Cleanup function
-    return () => {
-      setBook(null)
-    }
-  }, [route.params.book]);
+  // Fetch coordinates if book.location exists
+  useEffect(() => {
+    const fetchCoordinates = async () => {
+      if (book && book.location) {
+        const coords = await getLocationCoordinates(book.location); // Geokod location string (e.g., 'København')
+        if (coords) {
+          setLatitude(coords.latitude);
+          setLongitude(coords.longitude);
+        }
+      }
+    };
+
+    fetchCoordinates();
+  }, [book]); // Re-run the effect when book is updated
 
   if (!book) {
-    return <Text>Ingen data</Text>;
+    return <Text>Loading...</Text>; // Show loading while book data is being fetched
+  }
+
+  // Handle map loading
+  if (latitude === null || longitude === null) {
+    return <Text>Loading map...</Text>; // Show loading until coordinates are fetched
   }
 
   /*=========== HANDLE WRITE TO SELLER FUNCTION ============*/
@@ -78,40 +115,53 @@ export default function BookDetails({ navigation, route }) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.container}>
-        {/* Book image */}
-        {book.imageUri && (
-          <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-        )}
-        
-        {/* Book details */}
-        {["title", "author", "year", "subject", "price", "university", "semester"].map((field, index) => (
-          <View style={styles.row} key={index}>
-            <Text style={styles.label}>
-              {field.charAt(0).toUpperCase() + field.slice(1)}:
-            </Text>
-            <Text style={styles.value}>{book[field]}</Text>
-          </View>
-        ))}
+    <View style={styles.container}>
+      {/* Book image */}
+      {book.imageUri && (
+        <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
+      )}
 
-        {/* Buy button */}
-        <TouchableOpacity
-          style={styles.buyButton}
-          onPress={handlePurchase} // Check login before handling purchase
-        >
-          <Text style={styles.buyButtonText}>Køb bog</Text>
-        </TouchableOpacity>
+      {/* Book details */}
+      {["title", "author", "year", "subject", "price", "location", "university", "semester"].map((field, index) => (
+        <View style={styles.row} key={index}>
+          <Text style={styles.label}>
+            {field.charAt(0).toUpperCase() + field.slice(1)}:
+          </Text>
+          <Text style={styles.value}>{book[field]}</Text>
+        </View>
+      ))}
 
-        {/* Write to seller */}
-        <TouchableOpacity
-          style={styles.chatButton}
-          onPress={handleWriteToSeller} // Check login before navigating to Chat
-        >
-          <Text style={styles.chatButtonText}>Skriv til sælger</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+      {/* MapView for location */}
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: latitude,
+          longitude: longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        <Marker coordinate={{ latitude, longitude }} />
+      </MapView>
+
+      {/* Buy button */}
+      <TouchableOpacity
+        style={styles.buyButton}
+        onPress={handlePurchase}
+      >
+        <Text style={styles.buyButtonText}>Køb bog</Text>
+      </TouchableOpacity>
+
+      {/* Write to seller */}
+      <TouchableOpacity
+        style={styles.chatButton}
+        onPress={handleWriteToSeller}
+      >
+        <Text style={styles.chatButtonText}>Skriv til sælger</Text>
+      </TouchableOpacity>
+    </View>
+  </ScrollView>
+);
 }
 
 const styles = StyleSheet.create({
@@ -178,4 +228,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2, 
     shadowRadius: 10,
   },
+  image: {
+    width: "100%",
+    height: 300,
+    marginBottom: 20,
+    resizeMode: "cover",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  author: {
+    fontSize: 18,
+    color: "#757575",
+  },
+  year: {
+    fontSize: 16,
+    color: "#757575",
+  },
+  subject: {
+    fontSize: 16,
+    color: "#757575",
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FF6347",
+  },
+  map: {
+    width: "100%",
+    height: 100,
+    marginTop: 20,
+  },
+  
 });
