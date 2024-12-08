@@ -288,10 +288,10 @@ export default function Homepage({ navigation }) {
         ))}
 
         <TouchableOpacity
-          style={globalStyles.resetButton}
+          style={globalStyles.mainButton}
           onPress={handleResetFilters}
         >
-          <Text style={globalStyles.resetButtonText}>Nulstil filter</Text>
+          <Text style={globalStyles.mainButtonText}>Nulstil filter</Text>
         </TouchableOpacity>
       </View>
 

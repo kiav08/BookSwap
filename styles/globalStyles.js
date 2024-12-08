@@ -80,18 +80,20 @@ const globalStyles = StyleSheet.create({
     fontSize: 14,
     color: '#333', // Dark text for items
   },
-  resetButton: {
+  mainButton: {
     marginTop: 15,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     backgroundColor: '#156056', // Green background
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 110,
+    borderRadius: 10,
   },
-  resetButtonText: {
+  mainButtonText: {
     fontSize: 14,
     color: '#fff', // White text
-    fontWeight: 'bold',
+    fontFamily: 'abadi',
+    fontWeight: "bold",
+
   },
   filterTagContainer: {
     flexDirection: 'row',
@@ -291,7 +293,7 @@ const globalStyles = StyleSheet.create({
       fontSize: 16,
     },
     logoutButton: {
-      backgroundColor: "#DB8D16", // Orange background
+      backgroundColor: "#8C806F", 
       padding: 15,
       borderRadius: 10,
       alignItems: "center",
@@ -312,17 +314,19 @@ const globalStyles = StyleSheet.create({
       marginBottom: 20,
     },
     addButton: {
-      backgroundColor: "white",
+      marginTop: 15,
+      alignSelf: 'center',
+      backgroundColor: '#8C806F', 
+      paddingVertical: 15,
+      paddingHorizontal: 100,
       borderRadius: 10,
-      padding: 15,
-      alignItems: "center",
-      marginTop: 20,
-      marginBottom: 20,
     },
     addButtonText: {
-      color: "0000",
-      fontWeight: "bold",
+      color: "white",
       fontSize: 16,
+      fontFamily: 'abadi',
+      fontWeight: "bold",
+
     },
     bookImage: {
       width: "100%",

@@ -6,7 +6,6 @@ import {
   TextInput,
   Image,
   Alert,
-  FlatList,
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -271,19 +270,13 @@ export default function Profile() {
         </View>
         <TouchableOpacity
           onPress={handleUploadPicture}
-          style={{
-            backgroundColor: "#156056",
-            paddingVertical: 10,
-            paddingHorizontal: 40,
-            borderRadius: 25,
-            marginTop: 20,
-          }}
+          style={globalStyles.mainButton}
         >
-          <Text style={{ color: "#FFF", fontSize: 16 }}>
-            Upload Profilbillede
-          </Text>
+          <Text style={globalStyles.mainButtonText}> Upload profilbillede</Text>
         </TouchableOpacity>
       </View>
+      
+      <View style={globalStyles.separator} />
 
       {/* Add Book Button */}
       <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>

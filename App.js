@@ -30,7 +30,7 @@ const HomepageStack = () => {
         component={BookDetails}
         options={({ navigation }) => ({
           headerShown: true,
-          headerTitle: "Book Details",
+          headerTitle: "",
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Homepage")} // Navigate back to Homepage

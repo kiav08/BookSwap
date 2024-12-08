@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import AddBook from "./AddBook";
 
 // Define the users' points and rewards
 const PointScreen = ({ route, navigation }) => {
@@ -101,7 +100,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#F0F0E5",
     padding: 20,
   },
   backButton: {

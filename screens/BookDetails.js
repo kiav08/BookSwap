@@ -6,6 +6,8 @@ import { ScrollView } from "react-native";
 import { Image } from 'react-native';
 
 
+/* ========== BOOKDETAILS FUNCTION ========== */
+// Function to display book details when the user clicks on a book
 export default function BookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
 
@@ -26,6 +28,7 @@ export default function BookDetails({ navigation, route }) {
     return <Text>Ingen data</Text>;
   }
 
+  /*=========== HANDLE WRITE TO SELLER FUNCTION ============*/
   // Function to handle "Skriv til sælger"
   const handleWriteToSeller = () => {
     const currentUser = auth.currentUser;
@@ -43,6 +46,7 @@ export default function BookDetails({ navigation, route }) {
     }
   };
 
+  /*=========== HANDLE PURCHASE FUNCTION ============*/
   // Function to handle "Køb"
   const handlePurchase = () => {
     const currentUser = auth.currentUser;
@@ -114,6 +118,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#F0F0E5",
   },
   row: {
     flexDirection: "row",
@@ -133,26 +138,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   buyButton: {
-    backgroundColor: "blue",
+    backgroundColor: "#156056",
     padding: 10,
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 10,
     marginTop: 20,
   },
   buyButtonText: {
-    color: "white",
+    fontSize: 14,
+    color: '#fff', // White text
+    fontFamily: 'abadi',
     fontWeight: "bold",
   },
   chatButton: {
-    backgroundColor: "blue",
+    backgroundColor: "#8C806F",
     padding: 10,
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 10,
     marginTop: 10,
   },
   chatButtonText: {
-    color: "white",
+    fontSize: 14,
+    color: '#fff', // White text
+    fontFamily: 'abadi',
     fontWeight: "bold",
+
   },
   bookImage: {
     width: "100%",  
