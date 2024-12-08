@@ -104,9 +104,12 @@ export default function EditBookDetails({ navigation, route }) {
   return (
     <ScrollView style={styles.container}>
     <View style={styles.container}>
-      {book.imageUri && (
-      <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-      )}
+    {book.imageBase64 && (
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
+            style={styles.bookImage}
+          />
+        )}
       {/* Editable input fields for book details */}
       {["title", "author", "year", "subject", "price"].map((field, index) => (
         <View style={styles.row} key={index}>

@@ -7,8 +7,8 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  Image,
   Button,
+  Image,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import { FontAwesome } from "@expo/vector-icons";
@@ -196,7 +196,7 @@ export default function Homepage({ navigation }) {
             [id]: {
               title: book.title,
               author: book.author,
-              imageUri: book.imageUri,
+              imageBase64: book.imageBase64,
               subject: book.subject,
               year: book.year,
               price: book.price,
@@ -321,10 +321,11 @@ export default function Homepage({ navigation }) {
         <View style={globalStyles.gridContainers}>
           {filteredBooks.map((book) => (
             <View key={book.id} style={globalStyles.box}>
-              <Image
-                source={{ uri: book.imageUri }} // Adjust this to match your Firebase image key
-                style={globalStyles.bookImage}
-              />
+                      <Image
+          source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
+          style={globalStyles.bookImage}
+        />
+
               <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
                 <Text style={globalStyles.boxText}>{book.title}</Text>
                 <Text style={globalStyles.boxTextSmall}>{book.author}</Text>

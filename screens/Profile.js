@@ -300,7 +300,7 @@ export default function Profile() {
               onPress={() => navigation.navigate("EditBook", { book })}
             >
               <Image
-                source={{ uri: book.imageUri }}
+                source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
                 style={globalStyles.bookImage}
               />
               <Text style={globalStyles.boxText}>{book.title}</Text>
@@ -324,8 +324,8 @@ export default function Profile() {
               style={globalStyles.box}
               onPress={() => navigation.navigate("BookDetails", { book: book })} 
             >
-              <Image
-                source={{ uri: book.imageUri }}
+                <Image
+                source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
                 style={globalStyles.bookImage}
               />
               <Text style={globalStyles.boxText}>{book.title}</Text>

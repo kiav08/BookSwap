@@ -23,6 +23,7 @@ import { useNavigation } from "@react-navigation/native";
 import { auth } from "../FirebaseConfig"; // Import auth to get current user
 import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from 'expo-file-system';
 import globalStyles from "../styles/globalStyles";
 
 /*=============== ADDBOOK-function ================ */
@@ -54,6 +55,18 @@ export default function AddBook() {
 
   const [NewBook, setNewBook] = useState(initialState);
   const [imageUri, setImageUri] = useState(null);
+
+  const convertToBase64 = async (uri) => {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return base64;
+    } catch (error) {
+      console.error("Error converting image to base64:", error);
+      return null;
+    }
+  };
 
   // const uploadImageAsync = async (uri) => {
   //   const blob = await new Promise((resolve, reject) => {
@@ -109,12 +122,17 @@ export default function AddBook() {
       return Alert.alert("Error", "No user is logged in.");
     }
 
+    let base64Image = null;
+    if (imageUri) {
+      base64Image = await convertToBase64(imageUri);
+    }
+
     const bookData = {
       ...NewBook,
       sellerId,
       sellerEmail,
       status: "active", // Default status
-      imageUri: imageUri || null, // Include image URI if available
+      imageBase64: base64Image || null,
     };
 
     const booksRef = ref(db, "Books/");

@@ -116,10 +116,10 @@ export default function BookDetails({ navigation, route }) {
   return (
     <ScrollView style={styles.container}>
     <View style={styles.container}>
-      {/* Book image */}
-      {book.imageUri && (
-        <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-      )}
+    <Image
+      source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
+      style={styles.bookImage}
+      />
 
       {/* Book details */}
       {["title", "author", "year", "subject", "price", "location", "university", "semester"].map((field, index) => (
