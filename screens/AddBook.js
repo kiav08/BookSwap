@@ -11,10 +11,17 @@ import {
   Text,
   Image,
 } from "react-native";
-import { getDatabase, ref, push } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  push,
+  onValue,
+  get,
+  update,
+} from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { auth } from "../FirebaseConfig"; // Import auth to get current user
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 export default function AddBook() {
@@ -39,7 +46,7 @@ export default function AddBook() {
   };
 
   const [NewBook, setNewBook] = useState(initialState);
-  const [imageUri, setImageUri] = useState(null); 
+  const [imageUri, setImageUri] = useState(null);
 
   const uploadImageAsync = async (uri) => {
     const blob = await new Promise((resolve, reject) => {
@@ -50,9 +57,12 @@ export default function AddBook() {
       xhr.open("GET", uri, true);
       xhr.send();
     });
-  
+
     const storage = getStorage();
-    const imageRef = storageRef(storage, "bookImages/" + new Date().toISOString());
+    const imageRef = storageRef(
+      storage,
+      "bookImages/" + new Date().toISOString()
+    );
     await uploadBytes(imageRef, blob);
     const downloadURL = await getDownloadURL(imageRef);
     blob.close();
@@ -94,15 +104,28 @@ export default function AddBook() {
     };
 
     const booksRef = ref(db, "Books/");
-    await push(booksRef, bookData)
-      .then(() => {
-        Alert.alert("Success", "Book was added successfully!");
-        setNewBook(initialState); // Reset form
-        navigation.navigate("Profile");
-      })
-      .catch((error) => {
-        console.error(`Error: ${error.message}`);
-      });
+    const userRef = ref(db, `Users/${sellerId}`);
+
+    try {
+      // Save book data
+      await push(booksRef, bookData);
+
+      // Fetch current points once and update them
+      const snapshot = await get(userRef); // Fetch user data
+      const userData = snapshot.val();
+      const currentPoints = userData?.points || 0;
+      const newPoints = currentPoints + 20;
+
+      // Update points in the database
+      await update(userRef, { points: newPoints });
+
+      Alert.alert("Success", "Book was added successfully!");
+      setNewBook(initialState); // Reset form
+      navigation.navigate("Profile");
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+      Alert.alert("Error", "An error occurred while adding the book.");
+    }
   };
 
   const openCamera = async () => {
@@ -123,7 +146,8 @@ export default function AddBook() {
   };
 
   const openImageLibrary = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       alert("Adgang til billedbiblioteket er påkrævet!");
       return;
@@ -138,7 +162,6 @@ export default function AddBook() {
       setImageUri(result.assets[0].uri);
     }
   };
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -157,7 +180,9 @@ export default function AddBook() {
           );
         })}
         <View style={styles.imageContainer}>
-          {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
+          {imageUri && (
+            <Image source={{ uri: imageUri }} style={styles.image} />
+          )}
           <TouchableOpacity onPress={openCamera} style={styles.button}>
             <Text style={styles.buttonText}>Åben Kamera</Text>
           </TouchableOpacity>
@@ -165,8 +190,13 @@ export default function AddBook() {
             <Text style={styles.buttonText}>Åben Album</Text>
           </TouchableOpacity>
         </View>
-        <Button title={"Add book"} onPress={handleSave} />   
-        </ScrollView>
+        <Button
+          title={"Add book"}
+          onPress={() => {
+            handleSave();
+          }}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -19,15 +19,21 @@ const firebaseConfig = {
   appId: "1:690679301727:web:c78007959fa72f8c6f3dea",
 };
 
-let app;
-if (getApps().length < 1) {
-  app = initializeApp(firebaseConfig);
-  console.log("Firebase Initialized");
-}
+// let app;
+// if (getApps().length < 1) {
+//   app = initializeApp(firebaseConfig);
+//   console.log("Firebase Initialized");
+// }
 
-// Initialize Firebase Auth with AsyncStorage persistence
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+// // Initialize Firebase Auth with AsyncStorage persistence
+// const auth = initializeAuth(app, {
+//   persistence: getReactNativePersistence(AsyncStorage),
+// });
 
-export { auth };
+// export { auth };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Export Firebase Auth
+export const auth = getAuth(app);
