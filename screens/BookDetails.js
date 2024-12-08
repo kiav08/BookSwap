@@ -56,6 +56,7 @@ export default function BookDetails({ navigation, route }) {
       update(bookRef, { status: "reserved" })
         .then(() => {
           Alert.alert("Success", "Bogen er nu reserveret.");
+          navigation.navigate("CheckOut",{book});
         })
         .catch((error) => {
           console.error("Error updating book:", error);

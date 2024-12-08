@@ -13,6 +13,8 @@ import EditBook from "./screens/EditBook";
 import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
 import PointScreen from "./screens/PointScreen";
+import CheckOut from "./screens/CheckOut";
+ 
 
 // Creating navigators
 const Stack = createStackNavigator();
@@ -38,6 +40,14 @@ const HomepageStack = () => {
             </TouchableOpacity>
           ),
         })}
+      />
+      <Stack.Screen
+        name="CheckOut"
+        component={CheckOut} // Include the Checkout screen
+        options={{
+          headerShown: true,
+          headerTitle: "CheckOut",
+        }}
       />
       <Stack.Screen name="Chat" component={Chat} />
     </Stack.Navigator>

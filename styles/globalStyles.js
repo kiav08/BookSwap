@@ -375,6 +375,43 @@ const globalStyles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 20,
   },
+  deliveryOption: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  selectedOption: {
+    backgroundColor: "#e0f7fa",
+  },
+  totalPrice: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginTop: 10,
+  },
+  confirmButton: {
+    backgroundColor: "blue",
+    padding: 15,
+    alignItems: "center",
+    borderRadius: 5,
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  section: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 20,
+  },
 });
 
 export default globalStyles;

@@ -158,7 +158,7 @@ export default function Homepage({ navigation }) {
     }
   };
 
-  // Toggle the 'like' status of a book
+  // Toggle the 'like' status of a boork
   const toggleLike = (id) => {
     if (!user) {
       // If the user is not logged in, show an alert

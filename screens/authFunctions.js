@@ -124,6 +124,27 @@ export const handleLogout = (setUser) => {
     });
 };
 
+// Funktion til at gemme ordren i databasen
+export const saveOrder = async (order) => {
+  const user = auth.currentUser; // Hent den nuværende bruger
+
+  if (!user) {
+    Alert.alert("Fejl", "Du skal være logget ind for at kunne bestille.");
+    return;
+  }
+
+  try {
+    const orderId = Date.now(); // Brug timestamp som unik ID
+    const db = getDatabase();
+    await set(ref(db, `orders/${user.uid}/${orderId}`), order); // Gem ordren under brugerens UID og ordre-ID
+
+    Alert.alert("Success", "Din ordre er gemt i databasen.");
+  } catch (error) {
+    console.error("Fejl under lagring af ordre:", error);
+    Alert.alert("Fejl", "Kunne ikke gemme ordren: " + error.message);
+  }
+};
+
 export const subscribeToAuthState = (setUser, fetchUserBooksCallback) => {
   return onAuthStateChanged(auth, (currentUser) => {
     setUser(currentUser);
