@@ -16,8 +16,6 @@ const saveOrder = async (order) => {
     const orderId = Date.now(); 
     const db = getDatabase();
     await set(ref(db, `orders/${user.uid}/${orderId}`), order); // Gem ordren under brugerens UID og ordre-ID
-
-    Alert.alert("Success", "Din ordre er gemt i databasen.");
   } catch (error) {
     console.error("Fejl under lagring af ordre:", error);
     Alert.alert("Fejl", "Kunne ikke gemme ordren: " + error.message);
