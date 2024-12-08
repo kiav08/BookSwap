@@ -63,6 +63,9 @@ const ProfileStack = () => {
       <Stack.Screen name="AddBook" component={AddBook} />
       <Stack.Screen name="Chat" component={Chat} />
       <Stack.Screen name="PointScreen" component={PointScreen} />
+      <Stack.Screen name="BookDetails" component={BookDetails} />
+
+
     </Stack.Navigator>
   );
 };

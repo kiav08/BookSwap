@@ -93,7 +93,6 @@ const globalStyles = StyleSheet.create({
     color: '#fff', // White text
     fontFamily: 'abadi',
     fontWeight: "bold",
-
   },
   filterTagContainer: {
     flexDirection: 'row',

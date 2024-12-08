@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   ScrollView,
+  StyleSheet
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -21,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyles from "../styles/globalStyles";
 import { auth } from "../FirebaseConfig"; // Import Firebase auth
 
+
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [books, setBooks] = useState([]);
@@ -32,6 +34,7 @@ export default function Profile() {
   const [points, setPoints] = useState(0);
   const [userProfile, setUserProfile] = useState({});
   const navigation = useNavigation();
+   
 
   // Check auth state and fetch user data
   useEffect(() => {
@@ -272,7 +275,7 @@ export default function Profile() {
           onPress={handleUploadPicture}
           style={globalStyles.mainButton}
         >
-          <Text style={globalStyles.mainButtonText}> Upload profilbillede</Text>
+          <Text style={styles.uploadpicText}>Upload profilbillede</Text>
         </TouchableOpacity>
       </View>
       
@@ -316,10 +319,10 @@ export default function Profile() {
         <Text style={globalStyles.heading}>Dine likede bøger</Text>
         <View style={globalStyles.gridContainer}>
           {likedBooks.map((book) => (
-            <TouchableOpacity
+      <TouchableOpacity
               key={book.id}
               style={globalStyles.box}
-              onPress={() => navigation.navigate("BookDetails", { book })} // Adjust navigation as needed
+              onPress={() => navigation.navigate("BookDetails", { book: book })} 
             >
               <Image
                 source={{ uri: book.imageUri }}
@@ -338,21 +341,6 @@ export default function Profile() {
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine gemte bøger</Text>
         <View style={globalStyles.gridContainer}>
-          {likedBooks.map((book) => (
-            <TouchableOpacity
-              key={book.id}
-              style={globalStyles.box}
-              onPress={() => navigation.navigate("EditBook", { book })}
-            >
-              <Image
-                source={{ uri: book.imageUri }}
-                style={globalStyles.bookImage}
-              />
-              <Text style={globalStyles.boxText}>{book.title}</Text>
-              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
-              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
-            </TouchableOpacity>
-          ))}
         </View>
       </View>
 
@@ -372,3 +360,11 @@ export default function Profile() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create ({
+  uploadpicText: {
+    fontSize: 14,
+    color: '#fff', // White text
+    fontFamily: 'abadi',
+  },
+});

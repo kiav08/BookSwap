@@ -165,10 +165,10 @@ export default function Homepage({ navigation }) {
     }
   };
 
-  // Toggle the 'like' status of a book
+  /* ========= TOGLE LIKE FUNCTION  */
+//the function to toggle the like status of a book, add it to the user's liked books on its profile, and update the book data in Firebase
   const toggleLike = (id) => {
     if (!user) {
-      // If the user is not logged in, show an alert
       Alert.alert(
         "Login påkrævet",
         "Du skal være logget ind for at like en bog.",
@@ -181,28 +181,46 @@ export default function Homepage({ navigation }) {
       );
       return;
     }
-
+  
     const db = getDatabase();
     const bookRef = ref(db, `Books/${id}`);
+    const userLikedBooksRef = ref(db, `LikedBooks/${user.uid}`); // Reference to store liked books for the user
     const updatedBooks = books.map((book) => {
       if (book.id === id) {
-        const liked = !book.liked;
-        const likedBy = book.likedBy || [];
+        const liked = !book.liked; // Toggle the like status
+        const likedBy = book.likedBy || []; // Get the list of users who liked the book
         if (liked) {
-          likedBy.push(user.uid);
+          likedBy.push(user.uid); // Add the current user to the likedBy array
+          // Add the book to the user's liked books
+          const userLikedBooks = {
+            [id]: {
+              title: book.title,
+              author: book.author,
+              imageUri: book.imageUri,
+              subject: book.subject,
+              year: book.year,
+              price: book.price,
+            },
+          };
+          update(userLikedBooksRef, userLikedBooks); // Store the book in the user's liked books
         } else {
           const index = likedBy.indexOf(user.uid);
-          if (index > -1) likedBy.splice(index, 1);
+          if (index > -1) likedBy.splice(index, 1); // Remove the current user from likedBy if unliked
+          // Remove the book from the user's liked books
+          const userLikedBooks = { [id]: null }; // Null to remove the book from the liked books
+          update(userLikedBooksRef, userLikedBooks);
         }
-        update(bookRef, { liked, likedBy });
-        return { ...book, liked, likedBy };
+  
+        update(bookRef, { liked, likedBy }); // Update the book data in Firebase
+        return { ...book, liked, likedBy }; // Return the updated book object
       }
       return book;
     });
-
-    setBooks(updatedBooks);
-    setFilteredBooks(updatedBooks);
+  
+    setBooks(updatedBooks); // Update the local state for books
+    setFilteredBooks(updatedBooks); // Update the filtered books state
   };
+  
 
   // Display a loading message if there are no books
   if (books.length === 0) {
