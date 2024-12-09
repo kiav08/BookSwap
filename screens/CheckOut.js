@@ -6,45 +6,57 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  StyleSheet,
 } from "react-native";
 import globalStyles from "../styles/globalStyles";
 import { getDatabase, ref, set, update } from "firebase/database";
 import { auth } from "../FirebaseConfig";
 
+/* ========================= SAVEORDER FUNCTION ========================= */
+//function that saves the order to the database if the user is logged in
 const saveOrder = async (order) => {
   const user = auth.currentUser;
 
+  //if the user is not logged in, an alert will be shown
   if (!user) {
     Alert.alert("Fejl", "Du skal være logget ind for at kunne bestille.");
     return;
   }
 
+  //if the user is logged in, the order will be saved to the database
   try {
     const orderId = Date.now();
     const db = getDatabase();
-    await set(ref(db, `orders/${user.uid}/${orderId}`), order); // Gem ordren under brugerens UID og ordre-ID
+    // Save the order to the database
+    await set(ref(db, `orders/${user.uid}/${orderId}`), order);
   } catch (error) {
     console.error("Fejl under lagring af ordre:", error);
     Alert.alert("Fejl", "Kunne ikke gemme ordren: " + error.message);
   }
 };
 
+/* ========================= CHECKOUT FUNCTION ========================= */
+//function that handles the checkout process when the user tries to buy a book
 export default function CheckOut({ route, navigation }) {
+  // Get the book from the route params
   const { book } = route.params || {};
   const user = auth.currentUser;
 
+  //Listens for the navigation and if the user is not logged in, the user will be redirected to the login screen
   useEffect(() => {
     if (!user) {
       navigation.navigate("Login");
     }
   }, [user, navigation]);
 
+  // If no book is found, show an alert and go back
   if (!book) {
     Alert.alert("Fejl", "Ingen bog fundet.");
     navigation.goBack();
     return null;
   }
 
+  // State for the form fields
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -57,10 +69,12 @@ export default function CheckOut({ route, navigation }) {
     bankInfo: "",
   });
 
+  // Function to handle input changes
   const handleInputChange = (field, value) => {
     setForm({ ...form, [field]: value });
   };
 
+  // Function to get the shipping fee based on the delivery option
   const getShippingFee = () => {
     if (form.deliveryOption === "meetWithSeller") {
       return 0;
@@ -68,6 +82,7 @@ export default function CheckOut({ route, navigation }) {
     return 40;
   };
 
+  // Function to calculate the total price
   const calculateTotal = () => {
     const bookPrice = parseFloat(book.price);
     const buyerProtectionFee = 6;
@@ -75,6 +90,7 @@ export default function CheckOut({ route, navigation }) {
     return bookPrice + buyerProtectionFee + shippingFee;
   };
 
+  // Function to handle the confirm order button
   const handleConfirmOrder = () => {
     if (
       !form.name ||
@@ -90,7 +106,8 @@ export default function CheckOut({ route, navigation }) {
       );
       return;
     }
-  
+
+    // Create the order object
     const order = {
       bookTitle: book.title,
       bookPrice: book.price,
@@ -98,17 +115,16 @@ export default function CheckOut({ route, navigation }) {
       buyerInfo: form,
       orderDate: new Date().toISOString(),
     };
-  
+
     saveOrder(order);
-  
+
+    // Update the book status and move it to the BookSold node
     const db = getDatabase();
     const bookRef = ref(db, `Books/${book.id}`);
     const bookSoldRef = ref(db, `BookSold/${book.id}`);
-  
-    // Update the book's status to sold and move it to BookSold
+
     update(bookRef, { status: "sold" })
       .then(() => {
-        // Add the book to the BookSold node
         return set(bookSoldRef, {
           ...book,
           status: "sold",
@@ -122,9 +138,9 @@ export default function CheckOut({ route, navigation }) {
         });
       })
       .then(() => {
-        // Remove the book from the Books node
-        return set(bookRef, null); // Setting the reference to null removes the node
+        return set(bookRef, null);
       })
+      // Show an confirmation and navigate to the homepage
       .then(() => {
         Alert.alert(
           "Bestilling bekræftet",
@@ -140,22 +156,27 @@ export default function CheckOut({ route, navigation }) {
         );
       })
       .catch((error) => {
-        console.error("Fejl under opdatering af bogstatus eller overførsel:", error);
+        console.error(
+          "Fejl under opdatering af bogstatus eller overførsel:",
+          error
+        );
         Alert.alert("Fejl", "Kunne ikke opdatere bogstatus eller flytte data.");
       });
   };
-  
+
+  /* ========================= RETURN ========================= */
 
   return (
     <ScrollView style={globalStyles.container}>
-      <View style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Din ordre</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Din ordre</Text>
         <Text>Titel: {book.title}</Text>
         <Text>Pris: {book.price} kr</Text>
       </View>
 
-      <View style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Personlige oplysninger</Text>
+      {/* Input fields */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Personlige oplysninger</Text>
         <TextInput
           placeholder="Navn"
           style={globalStyles.input}
@@ -196,13 +217,13 @@ export default function CheckOut({ route, navigation }) {
         />
       </View>
 
-      <View style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Leveringsmulighed</Text>
+      {/* Delivery options */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Leveringsmulighed</Text>
         <TouchableOpacity
           style={[
-            globalStyles.deliveryOption,
-            form.deliveryOption === "meetWithSeller" &&
-              globalStyles.selectedOption,
+            styles.deliveryOption,
+            form.deliveryOption === "meetWithSeller" && styles.selectedOption,
           ]}
           onPress={() => handleInputChange("deliveryOption", "meetWithSeller")}
         >
@@ -210,8 +231,8 @@ export default function CheckOut({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={[
-            globalStyles.deliveryOption,
-            form.deliveryOption === "home" && globalStyles.selectedOption,
+            styles.deliveryOption,
+            form.deliveryOption === "home" && styles.selectedOption,
           ]}
           onPress={() => handleInputChange("deliveryOption", "home")}
         >
@@ -219,8 +240,8 @@ export default function CheckOut({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={[
-            globalStyles.deliveryOption,
-            form.deliveryOption === "pickup" && globalStyles.selectedOption,
+            styles.deliveryOption,
+            form.deliveryOption === "pickup" && styles.selectedOption,
           ]}
           onPress={() => handleInputChange("deliveryOption", "pickup")}
         >
@@ -236,8 +257,9 @@ export default function CheckOut({ route, navigation }) {
         )}
       </View>
 
-      <View style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Tilføj betalingsmetode</Text>
+      {/* Bank information */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tilføj betalingsmetode</Text>
         <TextInput
           placeholder="Bank informationer"
           style={globalStyles.input}
@@ -246,22 +268,64 @@ export default function CheckOut({ route, navigation }) {
         />
       </View>
 
-      <View style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Ordreoversigt</Text>
+      {/* Order summary */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Ordreoversigt</Text>
         <Text>Ordre: {book.price} kr</Text>
         <Text>Gebyr for køberbeskyttelse: 6 kr</Text>
         <Text>Porto: {getShippingFee()}</Text>
-        <Text style={globalStyles.totalPrice}>
-          I alt: {calculateTotal()} kr
-        </Text>
+        <Text style={styles.totalPrice}>I alt: {calculateTotal()} kr</Text>
       </View>
 
+      {/* Confirm order button */}
       <TouchableOpacity
-        style={globalStyles.confirmButton}
+        style={globalStyles.addButton}
         onPress={handleConfirmOrder}
       >
-        <Text style={globalStyles.confirmButtonText}>Bekræft bestilling</Text>
+        <Text style={globalStyles.addButtonText}>Bekræft bestilling</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
+
+/* ========================= STYLES ========================= */
+
+const styles = StyleSheet.create({
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  section: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  deliveryOption: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  selectedOption: {
+    backgroundColor: "#156056",
+  },
+  totalPrice: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginTop: 10,
+  },
+  confirmButton: {
+    backgroundColor: "blue",
+    padding: 15,
+    alignItems: "center",
+    borderRadius: 5,
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+});

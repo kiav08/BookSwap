@@ -13,13 +13,17 @@ import {
 import { getDatabase, ref, update, remove } from "firebase/database";
 import globalStyles from "../styles/globalStyles";
 
+/* ========================= EDITBOOK FUNCTION ========================= */
+//function that allows the user to edit the details of a book
 export default function EditBookDetails({ navigation, route }) {
+  // State for the book details
   const [book, setBook] = useState(null);
 
+  // Get the book from the route params
   useEffect(() => {
     setBook(route.params.book);
 
-    // Custom back button to navigate to Profile
+    // Navigate back to the Profile screen
     navigation.setOptions({
       headerLeft: () => (
         <Button title="Back" onPress={() => navigation.navigate("Profile")} />
@@ -60,9 +64,11 @@ export default function EditBookDetails({ navigation, route }) {
       return Alert.alert("Error", "Book data is missing.");
     }
 
+    // Get a reference to the database
     const db = getDatabase();
     const bookRef = ref(db, `Books/${book.id}`);
 
+    // Remove the book from the database
     remove(bookRef)
       .then(() => {
         Alert.alert("Success", "Book deleted successfully!");
@@ -100,10 +106,12 @@ export default function EditBookDetails({ navigation, route }) {
     return <Text>No data</Text>;
   }
 
+  /* ========================= RETURN ========================= */
+
   return (
     <ScrollView style={globalStyles.container}>
-          {/* Back Button */}
-          <TouchableOpacity
+      {/* Back Button */}
+      <TouchableOpacity
         style={globalStyles.backButton}
         onPress={() => navigation.goBack()}
       >
@@ -172,8 +180,9 @@ export default function EditBookDetails({ navigation, route }) {
   );
 }
 
+/* ========================= STYLES ========================= */
 const styles = StyleSheet.create({
-  container: {
+  container: { //container to image
     flex: 1,
     padding: 20,
   },

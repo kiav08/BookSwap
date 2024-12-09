@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { auth } from "../FirebaseConfig";
 import globalStyles from "../styles/globalStyles";
@@ -9,28 +15,32 @@ export default function Chat({ navigation }) {
   const [bookTitles, setBookTitles] = useState({});
   const currentUser = auth.currentUser;
 
+  // Fetch chats and book titles
   useEffect(() => {
-    if (!currentUser) {
-      return;
-    }
-
     const db = getDatabase();
-
-    // Fetch all chats
     const chatsRef = ref(db, "chats");
     const booksRef = ref(db, "books");
 
+    // If user is not logged in, return
+    if (!currentUser) {
+      return;
+    }
+    // Fetch chats where the current user is either the sender or receiver of the chat
     const unsubscribeChats = onValue(chatsRef, (snapshot) => {
+      // Get the data from the snapshot, which is a picture of the database at that moment
       const data = snapshot.val();
+      // If there is data, filter the chats to only include chats where the current user is the sender or receiver
       if (data) {
         const filteredChats = Object.entries(data)
           .filter(
             ([, chat]) =>
-              chat.senderId === currentUser.uid || chat.receiverId === currentUser.uid
+              chat.senderId === currentUser.uid ||
+              chat.receiverId === currentUser.uid
           )
           .map(([id, chat]) => ({ id, ...chat }));
         setChats(filteredChats);
       } else {
+        // If there is no data, set chats to an empty array
         setChats([]);
       }
     });
@@ -41,31 +51,35 @@ export default function Chat({ navigation }) {
       if (data) {
         // Map book IDs to titles
         const titlesMap = {};
+        // Iterate over each book in the data and store the title in the titlesMap
         Object.entries(data).forEach(([key, book]) => {
-          titlesMap[key] = book.title; // Use the database key as the ID
+          // Use the database key as the ID
+          titlesMap[key] = book.title;
         });
-        setBookTitles(titlesMap); // Store titles mapped to book IDs
+        // Store titles mapped to book IDs
+        setBookTitles(titlesMap);
       }
     });
-
     return () => {
       unsubscribeChats();
       unsubscribeBooks();
     };
   }, [currentUser]);
 
+  /* ============== WRITE CHATMESSAGES =============== */
   const renderChat = ({ item }) => {
+    // Check if the current user is the sender of the chat
     const isSender = item.senderId === currentUser.uid;
     const messagePrefix = isSender ? "Mig:" : "Anmodning:";
 
+    // Get the ID of the other user in the chat
     const otherUserId =
       item.senderId === currentUser.uid ? item.receiverId : item.senderId;
 
+    // Return a chat item
     return (
-      <TouchableOpacity
-        style={styles.chatItem}
-        onPress={() => navigation.navigate("ChatDetails", { chatId: item.id })}
-      >
+      <TouchableOpacity style={styles.chatItem}>
+        {/* Display the book title and the other user's ID */}
         <Text style={styles.chatText}>
           Chat om "{item.bookTitle}" med: {otherUserId}
         </Text>
@@ -76,9 +90,10 @@ export default function Chat({ navigation }) {
     );
   };
 
+  // If the user is not logged in, return a message
   return (
     <View style={globalStyles.container}>
-      <Text style={styles.title}>Dine Chats</Text>
+      <Text style={globalStyles.heading}>Dine Chats</Text>
       {chats.length > 0 ? (
         <FlatList
           data={chats}
@@ -93,19 +108,16 @@ export default function Chat({ navigation }) {
   );
 }
 
+
+/* ==================== Styles ===================== */
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
   chatList: {
     marginTop: 10,
   },
   chatItem: {
     padding: 15,
     borderRadius: 10,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#DB8D16",
     marginBottom: 10,
   },
   chatText: {
@@ -114,13 +126,14 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14,
-    color: "#757575",
+    color: "#fff",
     marginTop: 5,
   },
   noChatsText: {
     marginTop: 20,
-    fontSize: 16,
+    fontSize: 20,
     textAlign: "center",
-    color: "#757575",
+    color: "#8C806F",
+    fontWeight: "bold",
   },
 });

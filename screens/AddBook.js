@@ -26,7 +26,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import globalStyles from "../styles/globalStyles";
 
-/*=============== ADDBOOK-function ================ */
+/* ========================= ADDBOOK-function ========================= */
 //Exporting the AddBook function that will be used in App.js
 export default function AddBook() {
   const db = getDatabase();
@@ -53,6 +53,7 @@ export default function AddBook() {
   const [NewBook, setNewBook] = useState(initialState);
   const [imageUri, setImageUri] = useState(null);
 
+  // Function to convert image to base64
   const convertToBase64 = async (uri) => {
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
@@ -69,19 +70,10 @@ export default function AddBook() {
     setNewBook({ ...NewBook, [name]: event });
   };
 
-  /* ============ HANDLE SAVE FUNCTION ============ */
+  /* ========================= HANDLE SAVE FUNCTION ========================= */
   // Function to save the new book to Firebase
   const handleSave = async () => {
-    const {
-      title,
-      author,
-      year,
-      subject,
-      price,
-      location,
-      university,
-      semester,
-    } = NewBook;
+    const { title, author, year, subject, price, location } = NewBook;
 
     if (
       title.length === 0 ||
@@ -102,19 +94,22 @@ export default function AddBook() {
       return Alert.alert("Error", "No user is logged in.");
     }
 
+    // Convert image to base64
     let base64Image = null;
     if (imageUri) {
       base64Image = await convertToBase64(imageUri);
     }
 
+    // Book data to be saved in the database
     const bookData = {
       ...NewBook,
       sellerId,
       sellerEmail,
-      status: "active", // Default status
+      status: "active", // Default status for new books
       imageBase64: base64Image || null,
     };
 
+    // Reference to Books and Users in the database
     const booksRef = ref(db, "Books/");
     const userRef = ref(db, `Users/${sellerId}`);
 
@@ -122,8 +117,8 @@ export default function AddBook() {
       // Save book data
       await push(booksRef, bookData);
 
-      // Fetch current points once and update them
-      const snapshot = await get(userRef); // Fetch user data
+      // Fetch current user's points once and update them
+      const snapshot = await get(userRef);
       const userData = snapshot.val();
       const currentPoints = userData?.points || 0;
       const newPoints = currentPoints + 20;
@@ -132,7 +127,7 @@ export default function AddBook() {
       await update(userRef, { points: newPoints });
 
       Alert.alert("Success", "Book was added successfully!");
-      setNewBook(initialState); // Reset form
+      setNewBook(initialState);
       navigation.navigate("Profile");
     } catch (error) {
       console.error(`Error: ${error.message}`);
@@ -140,15 +135,17 @@ export default function AddBook() {
     }
   };
 
-  /* =========== OPENCAMERA FUNCTION ============== */
-  // Function to open camera and take a picture of the book
+  /* ========================= OPENCAMERA FUNCTION ========================= */
+  // Function to open camera to take a picture of the book
   const openCamera = async () => {
+    // Request permission to access the camera on the user's current device
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
       alert("Adgang til kameraet er påkrævet!");
       return;
     }
 
+    // Launch the camera and take a picture
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
@@ -159,9 +156,10 @@ export default function AddBook() {
     }
   };
 
-  /* =========== OPENIMAGELIBRARY FUNCTION ============== */
+  /* ========================= OPENIMAGELIBRARY FUNCTION ========================= */
   // Function to open image library and select a picture of the book
   const openImageLibrary = async () => {
+    // Request permission to access the image library on the user's current device
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -169,6 +167,7 @@ export default function AddBook() {
       return;
     }
 
+    // Launch the image library and select a picture
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
@@ -179,16 +178,19 @@ export default function AddBook() {
     }
   };
 
+  /* ========================= RETURN ========================= */
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView>
-            {/* Back Button */}
-      <TouchableOpacity
-        style={globalStyles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={globalStyles.backButtonText}>Tilbage</Text>
-      </TouchableOpacity>
+        {/* Back Button */}
+        <TouchableOpacity
+          style={globalStyles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={globalStyles.backButtonText}>Tilbage</Text>
+
+        {/* Add Book Form */}
+        </TouchableOpacity>
         {Object.keys(initialState).map((key, index) => {
           return (
             <View style={styles.row} key={index}>
@@ -202,6 +204,8 @@ export default function AddBook() {
             </View>
           );
         })}
+
+        {/* Buttons and actions to add a picture*/}
         <View style={styles.imageContainer}>
           {imageUri && (
             <Image source={{ uri: imageUri }} style={styles.image} />
@@ -216,16 +220,17 @@ export default function AddBook() {
             onPress={openCamera}
             style={globalStyles.mainButton}
           >
-            <Text style={globalStyles.mainButtonText}>Åben Kamera</Text>
+            <Text style={globalStyles.mainButtonText}>Åben kamera</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={openImageLibrary}
             style={globalStyles.mainButton}
           >
-            <Text style={globalStyles.mainButtonText}>Åben Album</Text>
+            <Text style={globalStyles.mainButtonText}>Åben album</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Save and Cancel Buttons */}
         <TouchableOpacity onPress={handleSave} style={globalStyles.addButton}>
           <Text style={globalStyles.addButtonText}>Tilføj bog</Text>
         </TouchableOpacity>
@@ -240,6 +245,8 @@ export default function AddBook() {
     </SafeAreaView>
   );
 }
+
+/* ========================= STYLES ========================= */
 
 const styles = StyleSheet.create({
   row: {

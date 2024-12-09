@@ -9,6 +9,7 @@ import {
   Alert,
   Button,
   Image,
+  StyleSheet,
 } from "react-native";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import { FontAwesome } from "@expo/vector-icons";
@@ -34,7 +35,7 @@ export default function Homepage({ navigation }) {
   });
   const [user, setUser] = useState(null);
 
-  // CHECKS if the user is logged in: Listen for changes in the user state to check if the user is logged in
+  // Checks if the user is logged in: Listen for changes in the user state to check if the user is logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -84,7 +85,7 @@ export default function Homepage({ navigation }) {
     return () => listenToBookUpdates();
   }, []);
 
-  // SEARCH AND FILTER FUNCTION:
+  /* ========================= SEARCH AND FILTER FUNCTION ========================= */
   //Apply the search and filters whenever the search or filters change
   useEffect(() => {
     applySearchAndFilters();
@@ -105,13 +106,12 @@ export default function Homepage({ navigation }) {
       );
     }
 
-    // Filter by university -- this is a mock filter
+    // Filter by university
     if (filters.university) {
       filtered = filtered.filter(
         (book) => book.university === filters.university
       );
     }
-
     // Filter by programme
     if (filters.programme) {
       const programmeBooks = programmeData.programmes[filters.programme] || [];
@@ -125,7 +125,7 @@ export default function Homepage({ navigation }) {
         })
       );
     }
-
+    // Filter by subject
     if (filters.subject) {
       filtered = filtered.filter((book) => book.subject === filters.subject);
     }
@@ -155,6 +155,23 @@ export default function Homepage({ navigation }) {
     setFilteredBooks(books);
   };
 
+  // Display a message if no books match the filters
+  if (filteredBooks.length === 0) {
+    return (
+      <View style={{ alignItems: "center", marginTop: 20 }}>
+        <Text>Ingen bøger matcher din søgning.</Text>
+        <Button
+          title="Tilbage"
+          onPress={() => {
+            // Reset your filters here
+            setFilters({ title: "", author: "" });
+          }}
+        />
+      </View>
+    );
+  }
+
+  /* ========================= BOOK SELECTION FUNCTION ========================= */
   // Handle the selection of a book to view its details
   const handleSelectBook = (id) => {
     const selectedBook = filteredBooks.find((book) => book.id === id);
@@ -165,7 +182,7 @@ export default function Homepage({ navigation }) {
     }
   };
 
-  /* ========= TOGLE LIKE FUNCTION  */
+  /* ========================= LIKE FUNCTION ========================= */
   //the function to toggle the like status of a book, add it to the user's liked books on its profile, and update the book data in Firebase
   const toggleLike = (id) => {
     if (!user) {
@@ -184,38 +201,43 @@ export default function Homepage({ navigation }) {
 
     const db = getDatabase();
     const bookRef = ref(db, `Books/${id}`);
-    const userLikedBooksRef = ref(db, `LikedBooks/${user.uid}`); // Reference to store liked books for the user
+    // Reference to store liked books for the user
+    const userLikedBooksRef = ref(db, `LikedBooks/${user.uid}`);
     const updatedBooks = books.map((book) => {
       if (book.id === id) {
-        const liked = !book.liked; // Toggle the like status
-        const likedBy = book.likedBy ? [...book.likedBy] : []; // Create a copy of likedBy array
+        // Toggle the like status
+        const liked = !book.liked;
+        // Create a copy of likedBy array
+        const likedBy = book.likedBy ? [...book.likedBy] : [];
 
         if (liked) {
-          likedBy.push(user.uid); // Add the current user to the likedBy array
+          // Add the current user to the likedBy array so it gets in to the database
+          likedBy.push(user.uid);
 
-          // Create a new userLikedBooks object excluding undefined values
+          // Create a new userLikedBooks object excluding undefined values, to post it on profile
           const userLikedBooks = {
             [id]: {
               title: book.title,
               author: book.author,
-              ...(book.imageBase64 ? { imageBase64: book.imageBase64 } : {}), // Add imageBase64 only if it's defined
+              ...(book.imageBase64 ? { imageBase64: book.imageBase64 } : {}),
               subject: book.subject,
               year: book.year,
               price: book.price,
             },
           };
 
-          update(userLikedBooksRef, userLikedBooks); // Store the book in the user's liked books
+          // Store the book in the user's liked books
+          update(userLikedBooksRef, userLikedBooks);
         } else {
           const index = likedBy.indexOf(user.uid);
-          if (index > -1) likedBy.splice(index, 1); // Remove the current user from likedBy if unliked
+          if (index > -1) likedBy.splice(index, 1);
 
-          // Remove the book from the user's liked books
-          const userLikedBooks = { [id]: null }; // Null to remove the book from the liked books
+          // Remove the book from the user's liked books in the database
+          const userLikedBooks = { [id]: null };
           update(userLikedBooksRef, userLikedBooks);
         }
 
-        // Update the book data in Firebase
+        // Update the book data in database
         update(bookRef, { liked, likedBy });
 
         // Return a new object instead of modifying the original
@@ -232,82 +254,63 @@ export default function Homepage({ navigation }) {
     setFilteredBooks(updatedBooks); // Update the filtered books state
   };
 
-  // Display a loading message if there are no books
-  if (books.length === 0) {
-    return <Text>Loading books...</Text>;
-  }
-
-  // Display a message if no books match the filters
-  if (filteredBooks.length === 0) {
-    return (
-      <View style={{ alignItems: "center", marginTop: 20 }}>
-        <Text>Ingen bøger matcher din søgning.</Text>
-        <Button
-          title="Tilbage"
-          onPress={() => {
-            // Reset your filters here
-            setFilters({ title: "", author: "" });
-          }}
-        />
-      </View>
-    );
-  }
+  /* ========================= RETURN ========================= */
 
   return (
     <ScrollView style={globalStyles.container}>
+      {/* Display the app title */}
       <Text style={globalStyles.heading}>BookSwap</Text>
 
-      <View style={globalStyles.stepContainer}>
-        <Text style={globalStyles.highlightedSubtitleText}>
+      {/* Display a banner */}
+      <View style={styles.stepContainer}>
+        <Text style={styles.highlightedSubtitleText}>
           Del og opdag brugte bøger
         </Text>
-        <Text style={globalStyles.descriptionText}>
+        <Text style={styles.descriptionText}>
           Find din næste yndlingsbog blandt vores udvalg👇
         </Text>
       </View>
 
       <View style={globalStyles.separator} />
 
+      {/* Display the searchbar */}
       <Text style={globalStyles.title}>Søg blandt udvalg</Text>
-
-      <View style={globalStyles.filterBox}>
+      <View style={styles.filterBox}>
         <TextInput
-          style={globalStyles.searchInput}
+          style={styles.searchInput}
           placeholder="Søg efter titel eller forfatter"
           value={search}
           onChangeText={setSearch}
         />
-        <Text style={globalStyles.filterByText}>Filtrér efter:</Text>
 
+        {/* Display the filter options */}
+        <Text style={styles.filterByText}>Filtrér efter:</Text>
         {Object.keys(options).map((field) => (
           <View
             key={field}
-            style={[
-              globalStyles.dropdownContainer,
-              dropdowns[field] && { zIndex: 1000 },
-            ]}
+            style={[dropdowns[field] && { zIndex: 1000 }, ]}
           >
             <TouchableOpacity
-              style={globalStyles.dropdownButton}
+              style={styles.dropdownButton}
               onPress={() => toggleDropdown(field)}
             >
-              <Text style={globalStyles.dropdownButtonText}>
+              <Text style={styles.dropdownButtonText}>
                 {filters[field] || `Vælg ${field}`}
               </Text>
             </TouchableOpacity>
             {dropdowns[field] && (
-              <View style={globalStyles.dropdownList}>
+              <View style={styles.dropdownList}>
                 {options[field].map((option, index) => (
                   <TouchableOpacity
                     key={index}
                     style={[
-                      globalStyles.dropdownItem,
+                      styles.dropdownItem,
                       index === options[field].length - 1 &&
-                        globalStyles.dropdownItemLast,
+                        styles.dropdownItemLast,
                     ]}
                     onPress={() => handleFilterChange(field, option)}
                   >
-                    <Text style={globalStyles.dropdownItemText}>{option}</Text>
+                    <Text style={styles.dropdownItemText}>{option}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -315,27 +318,27 @@ export default function Homepage({ navigation }) {
           </View>
         ))}
 
+        {/* Display the reset button */}
         <TouchableOpacity
-          style={globalStyles.mainButton}
+          style={styles.mainButton}
           onPress={handleResetFilters}
         >
-          <Text style={globalStyles.mainButtonText}>Nulstil filter</Text>
+          <Text style={styles.mainButtonText}>Nulstil filter</Text>
         </TouchableOpacity>
       </View>
 
       <View style={globalStyles.separator} />
 
+      {/* Display the books */}
       <Text style={globalStyles.title}>Udforsk bøger her</Text>
 
       <View style={globalStyles.sectionContainer}>
-        <View style={globalStyles.gridContainers}>
+        <View style={styles.gridContainers}>
           {filteredBooks.map((book) => (
             <View key={book.id} style={globalStyles.box}>
               <Image
                 source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
-                style={globalStyles.bookImage}
-              />
-
+                style={globalStyles.bookImage}/>
               <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
                 <Text style={globalStyles.boxText}>{book.title}</Text>
                 <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
@@ -343,6 +346,8 @@ export default function Homepage({ navigation }) {
                   {book.subject || "No subject"}
                 </Text>
               </TouchableOpacity>
+
+              {/* Display the like button */}
               <TouchableOpacity onPress={() => toggleLike(book.id)}>
                 <FontAwesome
                   name={book.liked ? "heart" : "heart-o"}
@@ -357,3 +362,116 @@ export default function Homepage({ navigation }) {
     </ScrollView>
   );
 }
+
+/* ========================= STYLES ========================= */
+const styles = StyleSheet.create({
+  filterBox: {
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "#fff", // White background for filter box
+    borderColor: "#8C806F", // Brown border
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  filterByText: {
+    fontSize: 16,
+    color: "#333", // Dark text for filter text
+    marginBottom: 10,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: "#8C806F", // Brown border
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    backgroundColor: "#fff", // White background
+    marginBottom: 15, // Space between elements
+    fontSize: 16,
+    color: "#333", // Text color
+  },
+  dropdownButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#8C806F", // Brown border
+    backgroundColor: "#fff", // White background
+    marginBottom: 15, // Space between dropdown buttons
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dropdownButtonText: {
+    fontSize: 14,
+    color: "#156056", // Dark text for dropdowns
+    fontWeight: "bold",
+  },
+  dropdownList: {
+    position: "absolute",
+    top: 50,
+    width: "100%",
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: "#8C806F", // Brown border
+    borderRadius: 10,
+    backgroundColor: "#fff", // White background
+    zIndex: 1000, // Ensure it overlays other elements
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0", // Light gray divider
+  },
+  dropdownItemLast: {
+    borderBottomWidth: 0, // Remove divider for the last item
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: "#333", // Dark text for items
+  },
+  stepContainer: {
+    backgroundColor: "#DB8D16",
+    paddingVertical: 90,
+    alignItems: "center",
+    shadowColor: "#000",
+    elevation: 5,
+    marginBottom: 20,
+    width: "100%",
+  },
+  highlightedSubtitleText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 10,
+    textShadowColor: "#000000",
+    textShadowRadius: 3,
+  },
+  descriptionText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    fontStyle: "italic",
+    color: "#FFF5E1",
+    textAlign: "center",
+  },
+  mainButton: {
+    marginTop: 15,
+    alignSelf: "center",
+    backgroundColor: "#156056", // Green background
+    paddingVertical: 10,
+    paddingHorizontal: 110,
+    borderRadius: 10,
+  },
+  mainButtonText: {
+    fontSize: 14,
+    color: "#fff", // White text
+    fontFamily: "abadi",
+    fontWeight: "bold",
+  },
+  gridContainers: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+})

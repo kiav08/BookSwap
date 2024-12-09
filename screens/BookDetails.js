@@ -1,29 +1,31 @@
-import React, { useEffect, useState } from "react"; 
-import { StyleSheet, Text, View, TouchableOpacity, Alert, InputAccessoryView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../FirebaseConfig";
 import { getDatabase, ref, update } from "firebase/database";
 import { ScrollView } from "react-native";
-import { Image } from 'react-native';
+import { Image } from "react-native";
 import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
-import * as Location from 'expo-location';  // Import Expo's Location API for geocoding
+import * as Location from "expo-location"; // Import Expo's Location API for geocoding
 import globalStyles from "../styles/globalStyles";
 
-
-
-/* ========== BOOKDETAILS FUNCTION ========== */
+/* ========================= BOOKDETAILS FUNCTION ========================= */
 // Function to display book details when the user clicks on a book
 export default function BookDetails({ navigation, route }) {
+  // Usestate to store book data
   const [book, setBook] = useState(null);
+  // Usestate to store latitude and longitude
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
 
-  // Funktion til at få latitude og longitude fra en location string (f.eks. København)
+  /* ========================= GET LOCATION COORDINATES FUNCTION ========================= */
+  // Function to get latitude and longitude from a location string
   const getLocationCoordinates = async (location) => {
     try {
-      // Geokodning af placeringen
-      const geocode = await Location.geocodeAsync(location);  // Brug Expo's geokodning API
+      // Geocode location string to get coordinates
+      const geocode = await Location.geocodeAsync(location);
+
       if (geocode.length > 0) {
-        const { latitude, longitude } = geocode[0];  // Hent første resultat
+        const { latitude, longitude } = geocode[0];
         return { latitude, longitude };
       } else {
         console.error("Location kunne ikke geokodes.");
@@ -37,8 +39,9 @@ export default function BookDetails({ navigation, route }) {
 
   // Fetch coordinates when book changes or component mounts
   useEffect(() => {
+    // Check if book data is passed from previous screen
     if (route.params && route.params.book) {
-      setBook(route.params.book); // Set book data from route params
+      setBook(route.params.book);
     }
   }, [route.params]);
 
@@ -46,7 +49,9 @@ export default function BookDetails({ navigation, route }) {
   useEffect(() => {
     const fetchCoordinates = async () => {
       if (book && book.location) {
-        const coords = await getLocationCoordinates(book.location); // Geokod location string (e.g., 'København')
+        // Get coordinates from location string and GeoCodes
+        const coords = await getLocationCoordinates(book.location);
+      
         if (coords) {
           setLatitude(coords.latitude);
           setLongitude(coords.longitude);
@@ -55,57 +60,61 @@ export default function BookDetails({ navigation, route }) {
     };
 
     fetchCoordinates();
-  }, [book]); // Re-run the effect when book is updated
+  }, [book]);
 
   if (!book) {
-    return <Text>Loading...</Text>; // Show loading while book data is being fetched
+    return <Text>Loading...</Text>;
   }
 
   // Handle map loading
   if (latitude === null || longitude === null) {
-    return <Text>Loading map...</Text>; // Show loading until coordinates are fetched
+    return <Text>Loading map...</Text>;
   }
 
-  /*=========== HANDLE WRITE TO SELLER FUNCTION ============*/
-// Function to handle "Skriv til sælger"
-const handleWriteToSeller = () => {
-  const currentUser = auth.currentUser;
+  /*========================= HANDLE WRITE TO SELLER FUNCTION ========================= */
+  // Function to handle the button "Skriv til sælger"
+  const handleWriteToSeller = () => {
+    const currentUser = auth.currentUser;
 
-  if (currentUser) {
-    const db = getDatabase();
-    const chatId = `${currentUser.uid}_${book.sellerId}_${book.id}`; // Unique chatId with book id
-    const chatRef = ref(db, `chats/${chatId}`);
+    // Check if user is logged in
+    if (currentUser) {
+      // User is logged in, proceed with chat logic
+      const db = getDatabase();
+      const chatId = `${currentUser.uid}_${book.sellerId}_${book.id}`; // Unique chatId with book id
+      const chatRef = ref(db, `chats/${chatId}`);
 
-    const newChat = {
-      senderId: currentUser.uid,
-      receiverId: book.sellerId,
-      bookTitle: book.title,
-      message: "Hej jeg er interesseret i " + book.title,
-      timestamp: Date.now(),
-    };
+      const newChat = {
+        senderId: currentUser.uid,
+        receiverId: book.sellerId,
+        bookTitle: book.title,
+        message: "Hej jeg er interesseret i " + book.title,
+        timestamp: Date.now(),
+      };
 
-    update(chatRef, newChat)
-      .then(() => {
-        Alert.alert("Success", "Chat oprettet. Du kan nu skrive til sælger.");
-        navigation.navigate("Chat", { chatId });
-      })
-      .catch((error) => {
-        console.error("Error creating chat:", error);
-        Alert.alert("Fejl", "Der skete en fejl under oprettelse af chat.");
-      });
-  } else {
-    Alert.alert(
-      "Log ind nødvendig",
-      "Du skal logge ind eller oprette en bruger for at fortsætte."
-    );
-    navigation.navigate("Profil");
-  }
-};
+      // Create chat in database
+      update(chatRef, newChat)
+        .then(() => {
+          Alert.alert("Success", "Chat oprettet. Du kan nu skrive til sælger.");
+          navigation.navigate("Chat", { chatId });
+        })
+        .catch((error) => {
+          console.error("Error creating chat:", error);
+          Alert.alert("Fejl", "Der skete en fejl under oprettelse af chat.");
+        });
+    } else {
+      // User is not logged in, alert and navigate to Profile
+      Alert.alert(
+        "Log ind nødvendig",
+        "Du skal logge ind eller oprette en bruger for at fortsætte."
+      );
+      navigation.navigate("Profil");
+    }
+  };
 
 
 
-  /*=========== HANDLE PURCHASE FUNCTION ============*/
-  // Function to handle "Køb"
+  /*========================= HANDLE PURCHASE FUNCTION ========================= */
+  // Function to handle "Køb bog" button
   const handlePurchase = () => {
     const currentUser = auth.currentUser;
 
@@ -118,7 +127,7 @@ const handleWriteToSeller = () => {
       update(bookRef, { status: "reserved" })
         .then(() => {
           Alert.alert("Success", "Bogen er nu reserveret.");
-          navigation.navigate("CheckOut",{book});
+          navigation.navigate("CheckOut", { book });
         })
         .catch((error) => {
           console.error("Error updating book:", error);
@@ -134,63 +143,66 @@ const handleWriteToSeller = () => {
     }
   };
 
+
+  /* ========================= RETURN ========================= */
   return (
     <ScrollView style={styles.container}>
-    <View style={styles.container}>
-          {/* Back Button */}
-          <TouchableOpacity
-        style={globalStyles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={globalStyles.backButtonText}>Tilbage</Text>
-      </TouchableOpacity>
-    <Image
-      source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
-      style={styles.bookImage}
-      />
+      <View style={styles.container}>
+        {/* Back Button */}
+        <TouchableOpacity
+          style={globalStyles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={globalStyles.backButtonText}>Tilbage</Text>
+        </TouchableOpacity>
+        <Image
+          source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
+          style={styles.bookImage}
+        />
 
-      {/* Book details */}
-      {["title", "author", "year", "subject", "price", "location"].map((field, index) => (
-        <View style={styles.row} key={index}>
-          <Text style={styles.label}>
-            {field.charAt(0).toUpperCase() + field.slice(1)}:
-          </Text>
-          <Text style={styles.value}>{book[field]}</Text>
-        </View>
-      ))}
+        {/* Book details */}
+        {["title", "author", "year", "subject", "price", "location"].map(
+          (field, index) => (
+            <View style={styles.row} key={index}>
+              <Text style={styles.label}>
+                {field.charAt(0).toUpperCase() + field.slice(1)}:
+              </Text>
+              <Text style={styles.value}>{book[field]}</Text>
+            </View>
+          )
+        )}
 
-      {/* MapView for location */}
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: latitude,
-          longitude: longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      >
-        <Marker coordinate={{ latitude, longitude }} />
-      </MapView>
+        {/* MapView for location */}
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: latitude,
+            longitude: longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          <Marker coordinate={{ latitude, longitude }} />
+        </MapView>
 
-      {/* Buy button */}
-      <TouchableOpacity
-        style={styles.buyButton}
-        onPress={handlePurchase}
-      >
-        <Text style={styles.buyButtonText}>Køb bog</Text>
-      </TouchableOpacity>
+        {/* Buy button */}
+        <TouchableOpacity style={styles.buyButton} onPress={handlePurchase}>
+          <Text style={styles.buyButtonText}>Køb bog</Text>
+        </TouchableOpacity>
 
-      {/* Write to seller */}
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={handleWriteToSeller}
-      >
-        <Text style={styles.chatButtonText}>Skriv til sælger</Text>
-      </TouchableOpacity>
-    </View>
-  </ScrollView>
-);
+        {/* Write to seller */}
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={handleWriteToSeller}
+        >
+          <Text style={styles.chatButtonText}>Skriv til sælger</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 }
+
+/* ========================= STYLES ========================= */
 
 const styles = StyleSheet.create({
   container: {
@@ -224,8 +236,8 @@ const styles = StyleSheet.create({
   },
   buyButtonText: {
     fontSize: 14,
-    color: '#fff', 
-    fontFamily: 'abadi',
+    color: "#fff",
+    fontFamily: "abadi",
     fontWeight: "bold",
   },
   chatButton: {
@@ -237,23 +249,22 @@ const styles = StyleSheet.create({
   },
   chatButtonText: {
     fontSize: 14,
-    color: '#fff',
-    fontFamily: 'abadi',
+    color: "#fff",
+    fontFamily: "abadi",
     fontWeight: "bold",
-
   },
   bookImage: {
-    width: "100%",  
-    height: 300,                
+    width: "100%",
+    height: 300,
     marginTop: 10,
     borderRadius: 15,
-    resizeMode: "cover",      
+    resizeMode: "cover",
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "#ddd",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2, 
+    shadowOpacity: 0.2,
     shadowRadius: 10,
   },
   image: {
@@ -288,5 +299,4 @@ const styles = StyleSheet.create({
     height: 100,
     marginTop: 20,
   },
-  
 });

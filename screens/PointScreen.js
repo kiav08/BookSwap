@@ -1,5 +1,3 @@
-// Display user's points and rewards, allow user to spend points on rewards
-// Import necessary components and libraries
 import React, { useState } from "react";
 import {
   View,
@@ -11,18 +9,19 @@ import {
 } from "react-native";
 import globalStyles from "../styles/globalStyles";
 
+/* ========================= USERS POINTS ========================= */
 // Define the users' points and rewards
 const PointScreen = ({ route, navigation }) => {
   const [points, setPoints] = useState(route?.params?.points || 0); // Initialize with points from navigation
 
-  // Define the rewards
+  // Define the rewards and their costs
   const rewards = [
-    { name: "10% på fragt", cost: 2 },
-    { name: "Plant et træ", cost: 10 },
-    { name: "Gratis annonce", cost: 20 },
-    { name: "20% på fragt", cost: 125 },
+    { name: "Plant et træ", cost: 40 },
+    { name: "Gratis annonce", cost: 100 },
+    { name: "10% på fragt", cost: 50 },
+    { name: "20% på fragt", cost: 90 },
     { name: "Tidlig adgang til nye bøger", cost: 150 },
-    { name: "Gratis fragt", cost: 300 },
+    { name: "Gratis fragt", cost: 200 },
     { name: "50 kr.- voucher", cost: 500 },
   ];
 
@@ -59,7 +58,8 @@ const PointScreen = ({ route, navigation }) => {
     }
   };
 
-  // Return component layout
+/* ========================= RETURN ========================= */
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Back Button */}
@@ -96,6 +96,7 @@ const PointScreen = ({ route, navigation }) => {
   );
 };
 
+/* ========================= STYLES ========================= */
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,

@@ -14,7 +14,6 @@ import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
 import PointScreen from "./screens/PointScreen";
 import CheckOut from "./screens/CheckOut";
- 
 
 // Creating navigators
 const Stack = createStackNavigator();
@@ -25,10 +24,11 @@ const HomepageStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Homepage" component={Homepage} />
-      <Stack.Screen name="BookDetails" component={BookDetails}/>
-      <Stack.Screen name="CheckOut" component={CheckOut}
-        options={{ headerShown: true, headerTitle: "Bekræft køb",
-        }}
+      <Stack.Screen name="BookDetails" component={BookDetails} />
+      <Stack.Screen
+        name="CheckOut"
+        component={CheckOut}
+        options={{ headerShown: true, headerTitle: "Bekræft køb" }}
       />
     </Stack.Navigator>
   );
@@ -72,7 +72,7 @@ const BottomNavigation = () => {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatStack} 
+        component={ChatStack}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" color={color} size={size} />

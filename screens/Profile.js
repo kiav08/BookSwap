@@ -1,3 +1,4 @@
+// import all the necessary libraries
 import React, { useState, useEffect } from "react";
 import {
   Text,
@@ -7,7 +8,7 @@ import {
   Image,
   Alert,
   ScrollView,
-  StyleSheet
+  StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -22,8 +23,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyles from "../styles/globalStyles";
 import { auth } from "../FirebaseConfig"; // Import Firebase auth
 
-
+/* ========================= FETCH USER ========================= */
+// Fetch user data from Firebase
 export default function Profile() {
+  // State variables
   const [user, setUser] = useState(null);
   const [books, setBooks] = useState([]);
   const [likedBooks, setLikedBooks] = useState([]);
@@ -34,19 +37,20 @@ export default function Profile() {
   const [points, setPoints] = useState(0);
   const [userProfile, setUserProfile] = useState({});
   const navigation = useNavigation();
-   
 
   // Check auth state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        // Fetch user data
         fetchUserBooks(currentUser.uid);
         fetchUserPoints(currentUser.uid);
-        fetchLikedBooks(currentUser.uid); // Fetch liked books
+        fetchLikedBooks(currentUser.uid);
         loadProfilePicture();
       }
     });
+    // Unsubscribe when component unmounts
     return () => unsubscribe();
   }, []);
 
@@ -59,6 +63,7 @@ export default function Profile() {
       (snapshot) => {
         const data = snapshot.val();
         if (data) {
+          // Convert object to array and filter by sellerId
           const booksList = Object.entries(data)
             .map(([key, value]) => ({ id: key, ...value }))
             .filter((book) => book.sellerId === userId);
@@ -85,7 +90,7 @@ export default function Profile() {
     );
   };
 
-  // Load profile picture
+  // Load user's profile picture
   const loadProfilePicture = async () => {
     const storedProfilePicture = await AsyncStorage.getItem("profilePicture");
     if (storedProfilePicture) {
@@ -158,18 +163,19 @@ export default function Profile() {
           }));
           setLikedBooks(likedBooksList);
         } else {
-          setLikedBooks([]); // Reset if no liked books
+          // Reset liked books if no data
+          setLikedBooks([]);
         }
       },
       (error) => console.error("Error fetching liked books:", error)
     );
   };
 
-
-  /* ==================== Login ==================== */
+  /* ==================== LOGIN ==================== */
   if (!user) {
     return (
       <View style={globalStyles.container}>
+        {/* Login form */}
         <Text style={globalStyles.text}>Login</Text>
         <TextInput
           style={globalStyles.input}
@@ -184,14 +190,12 @@ export default function Profile() {
           onChangeText={setLoginPassword}
           secureTextEntry
         />
-        <TouchableOpacity
-          style={globalStyles.loginButton}
-          onPress={handleLogin}
-        >
-          <Text style={globalStyles.loginButtonText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        <Text style={globalStyles.text}>Create Account</Text>
+        {/* Create account form */}
+        <Text style={styles.text}>Create Account</Text>
         <TextInput
           style={globalStyles.input}
           placeholder="Email"
@@ -206,17 +210,16 @@ export default function Profile() {
           secureTextEntry
         />
         <TouchableOpacity
-          style={globalStyles.createAccountButton}
+          style={styles.createAccountButton}
           onPress={handleCreateAccount}
         >
-          <Text style={globalStyles.createAccountButtonText}>
-            Create Account
-          </Text>
+          <Text style={styles.createAccountButtonText}>Create Account</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  /* ==================== PROFILE ==================== */
   return (
     <ScrollView style={globalStyles.container}>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
@@ -271,6 +274,7 @@ export default function Profile() {
             </TouchableOpacity>
           </View>
         </View>
+        {/* Upload picture button */}
         <TouchableOpacity
           onPress={handleUploadPicture}
           style={globalStyles.mainButton}
@@ -278,7 +282,7 @@ export default function Profile() {
           <Text style={styles.uploadpicText}>Upload profilbillede</Text>
         </TouchableOpacity>
       </View>
-      
+
       <View style={globalStyles.separator} />
 
       {/* Add Book Button */}
@@ -288,8 +292,7 @@ export default function Profile() {
 
       <View style={globalStyles.separator} />
 
-      {/* ==================== MyBooks ==================== */}
-
+      {/* User's boks*/}
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine annoncer</Text>
         <View style={globalStyles.gridContainer}>
@@ -300,7 +303,7 @@ export default function Profile() {
               onPress={() => navigation.navigate("EditBook", { book })}
             >
               <Image
-                source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
+                source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
                 style={globalStyles.bookImage}
               />
               <Text style={globalStyles.boxText}>{book.title}</Text>
@@ -313,19 +316,18 @@ export default function Profile() {
 
       <View style={globalStyles.separator} />
 
-      {/* ==================== liked books ==================== */}
-
+      {/* User's liked books  */}
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine likede bøger</Text>
         <View style={globalStyles.gridContainer}>
           {likedBooks.map((book) => (
-      <TouchableOpacity
+            <TouchableOpacity
               key={book.id}
               style={globalStyles.box}
-              onPress={() => navigation.navigate("BookDetails", { book: book })} 
+              onPress={() => navigation.navigate("BookDetails", { book: book })}
             >
-                <Image
-                source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
+              <Image
+                source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
                 style={globalStyles.bookImage}
               />
               <Text style={globalStyles.boxText}>{book.title}</Text>
@@ -338,33 +340,65 @@ export default function Profile() {
 
       <View style={globalStyles.separator} />
 
+      {/* User's followed titles */}
       <View style={globalStyles.sectionContainer}>
-        <Text style={globalStyles.heading}>Dine gemte bøger</Text>
-        <View style={globalStyles.gridContainer}>
-        </View>
-      </View>
-
-      <View style={globalStyles.separator} />
-
-      <View style={globalStyles.sectionContainer}>
-        <Text style={globalStyles.heading}>Bøger du følger</Text>
+        <Text style={globalStyles.heading}>Titler du følger</Text>
         <View style={globalStyles.gridContainer}></View>
       </View>
 
       <TouchableOpacity
-        style={globalStyles.logoutButton}
+        style={styles.logoutButton}
         onPress={() => handleLogout(setUser)}
       >
-        <Text style={globalStyles.logoutButtonText}>Log ud</Text>
+        <Text style={styles.logoutButtonText}>Log ud</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create ({
+/* ==================== STYLES ==================== */
+const styles = StyleSheet.create({
   uploadpicText: {
     fontSize: 14,
-    color: '#fff', // White text
-    fontFamily: 'abadi',
+    color: "#fff", // White text
+    fontFamily: "abadi",
+  },
+  loginButton: {
+    backgroundColor: "#156056", // Green background
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  loginButtonText: {
+    color: "#fff", // White text
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  createAccountButtonText: {
+    color: "#fff", // White text
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  logoutButtonText: {
+    color: "#fff", // White text
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  createAccountButton: {
+    backgroundColor: "#8C806F", // Brown background
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 30,
+  },
+
+  logoutButton: {
+    backgroundColor: "#8C806F",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 30,
   },
 });
