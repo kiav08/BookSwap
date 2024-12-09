@@ -166,7 +166,7 @@ export default function Homepage({ navigation }) {
   };
 
   /* ========= TOGLE LIKE FUNCTION  */
-//the function to toggle the like status of a book, add it to the user's liked books on its profile, and update the book data in Firebase
+  //the function to toggle the like status of a book, add it to the user's liked books on its profile, and update the book data in Firebase
   const toggleLike = (id) => {
     if (!user) {
       Alert.alert(
@@ -181,46 +181,56 @@ export default function Homepage({ navigation }) {
       );
       return;
     }
-  
+
     const db = getDatabase();
     const bookRef = ref(db, `Books/${id}`);
     const userLikedBooksRef = ref(db, `LikedBooks/${user.uid}`); // Reference to store liked books for the user
     const updatedBooks = books.map((book) => {
       if (book.id === id) {
         const liked = !book.liked; // Toggle the like status
-        const likedBy = book.likedBy || []; // Get the list of users who liked the book
+        const likedBy = book.likedBy ? [...book.likedBy] : []; // Create a copy of likedBy array
+
         if (liked) {
           likedBy.push(user.uid); // Add the current user to the likedBy array
-          // Add the book to the user's liked books
+
+          // Create a new userLikedBooks object excluding undefined values
           const userLikedBooks = {
             [id]: {
               title: book.title,
               author: book.author,
-              imageBase64: book.imageBase64,
+              ...(book.imageBase64 ? { imageBase64: book.imageBase64 } : {}), // Add imageBase64 only if it's defined
               subject: book.subject,
               year: book.year,
               price: book.price,
             },
           };
+
           update(userLikedBooksRef, userLikedBooks); // Store the book in the user's liked books
         } else {
           const index = likedBy.indexOf(user.uid);
           if (index > -1) likedBy.splice(index, 1); // Remove the current user from likedBy if unliked
+
           // Remove the book from the user's liked books
           const userLikedBooks = { [id]: null }; // Null to remove the book from the liked books
           update(userLikedBooksRef, userLikedBooks);
         }
-  
-        update(bookRef, { liked, likedBy }); // Update the book data in Firebase
-        return { ...book, liked, likedBy }; // Return the updated book object
+
+        // Update the book data in Firebase
+        update(bookRef, { liked, likedBy });
+
+        // Return a new object instead of modifying the original
+        return {
+          ...book,
+          liked,
+          likedBy,
+        };
       }
       return book;
     });
-  
+
     setBooks(updatedBooks); // Update the local state for books
     setFilteredBooks(updatedBooks); // Update the filtered books state
   };
-  
 
   // Display a loading message if there are no books
   if (books.length === 0) {
@@ -321,10 +331,10 @@ export default function Homepage({ navigation }) {
         <View style={globalStyles.gridContainers}>
           {filteredBooks.map((book) => (
             <View key={book.id} style={globalStyles.box}>
-                      <Image
-          source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
-          style={globalStyles.bookImage}
-        />
+              <Image
+                source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
+                style={globalStyles.bookImage}
+              />
 
               <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
                 <Text style={globalStyles.boxText}>{book.title}</Text>

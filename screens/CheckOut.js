@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from "react-native";
 import globalStyles from "../styles/globalStyles";
 import { getDatabase, ref, set } from "firebase/database";
 import { auth } from "../FirebaseConfig";
@@ -13,7 +20,7 @@ const saveOrder = async (order) => {
   }
 
   try {
-    const orderId = Date.now(); 
+    const orderId = Date.now();
     const db = getDatabase();
     await set(ref(db, `orders/${user.uid}/${orderId}`), order); // Gem ordren under brugerens UID og ordre-ID
   } catch (error) {
@@ -23,19 +30,19 @@ const saveOrder = async (order) => {
 };
 
 export default function CheckOut({ route, navigation }) {
-  const { book } = route.params || {}; 
+  const { book } = route.params || {};
   const user = auth.currentUser;
 
   useEffect(() => {
     if (!user) {
-      navigation.navigate("Login"); 
+      navigation.navigate("Login");
     }
   }, [user, navigation]);
 
   if (!book) {
     Alert.alert("Fejl", "Ingen bog fundet.");
-    navigation.goBack(); 
-    return null; 
+    navigation.goBack();
+    return null;
   }
 
   const [form, setForm] = useState({
@@ -45,7 +52,7 @@ export default function CheckOut({ route, navigation }) {
     address: "",
     postalCode: "",
     phone: "",
-    deliveryOption: "pickup", 
+    deliveryOption: "pickup",
     pickupLocation: "",
     bankInfo: "",
   });
@@ -54,16 +61,33 @@ export default function CheckOut({ route, navigation }) {
     setForm({ ...form, [field]: value });
   };
 
+  const getShippingFee = () => {
+    if (form.deliveryOption === "meetWithSeller") {
+      return 0;
+    }
+    return 40;
+  };
+
   const calculateTotal = () => {
     const bookPrice = parseFloat(book.price);
     const buyerProtectionFee = 6;
-    const shippingFee = 40;
+    const shippingFee = getShippingFee();
     return bookPrice + buyerProtectionFee + shippingFee;
   };
 
   const handleConfirmOrder = () => {
-    if (!form.name || !form.email || !form.address || !form.postalCode || !form.phone || !form.bankInfo) {
-      Alert.alert("Udfyld alle felter", "Alle felter skal udfyldes for at fortsætte.");
+    if (
+      !form.name ||
+      !form.email ||
+      !form.address ||
+      !form.postalCode ||
+      !form.phone ||
+      !form.bankInfo
+    ) {
+      Alert.alert(
+        "Udfyld alle felter",
+        "Alle felter skal udfyldes for at fortsætte."
+      );
       return;
     }
 
@@ -78,11 +102,11 @@ export default function CheckOut({ route, navigation }) {
     saveOrder(order);
 
     const db = getDatabase();
-    const bookRef = ref(db, `books/${book.id}`); 
+    const bookRef = ref(db, `books/${book.id}`);
 
     set(bookRef, {
       ...book,
-      status: "sold", 
+      status: "sold",
     })
       .then(() => {
         Alert.alert(
@@ -92,7 +116,7 @@ export default function CheckOut({ route, navigation }) {
             {
               text: "OK",
               onPress: () => {
-                navigation.navigate("Homepage"); 
+                navigation.navigate("Homepage");
               },
             },
           ]
@@ -159,6 +183,25 @@ export default function CheckOut({ route, navigation }) {
         <TouchableOpacity
           style={[
             globalStyles.deliveryOption,
+            form.deliveryOption === "meetWithSeller" &&
+              globalStyles.selectedOption,
+          ]}
+          onPress={() => handleInputChange("deliveryOption", "meetWithSeller")}
+        >
+          <Text>Mødes med sælger</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            globalStyles.deliveryOption,
+            form.deliveryOption === "home" && globalStyles.selectedOption,
+          ]}
+          onPress={() => handleInputChange("deliveryOption", "home")}
+        >
+          <Text>Send til hjemmeadresse</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            globalStyles.deliveryOption,
             form.deliveryOption === "pickup" && globalStyles.selectedOption,
           ]}
           onPress={() => handleInputChange("deliveryOption", "pickup")}
@@ -173,15 +216,6 @@ export default function CheckOut({ route, navigation }) {
             onChangeText={(value) => handleInputChange("pickupLocation", value)}
           />
         )}
-        <TouchableOpacity
-          style={[
-            globalStyles.deliveryOption,
-            form.deliveryOption === "home" && globalStyles.selectedOption,
-          ]}
-          onPress={() => handleInputChange("deliveryOption", "home")}
-        >
-          <Text>Send til hjem</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={globalStyles.section}>
@@ -198,11 +232,16 @@ export default function CheckOut({ route, navigation }) {
         <Text style={globalStyles.sectionTitle}>Ordreoversigt</Text>
         <Text>Ordre: {book.price} kr</Text>
         <Text>Gebyr for køberbeskyttelse: 6 kr</Text>
-        <Text>Porto: 40 kr</Text>
-        <Text style={globalStyles.totalPrice}>I alt: {calculateTotal()} kr</Text>
+        <Text>Porto: {getShippingFee()}</Text>
+        <Text style={globalStyles.totalPrice}>
+          I alt: {calculateTotal()} kr
+        </Text>
       </View>
 
-      <TouchableOpacity style={globalStyles.confirmButton} onPress={handleConfirmOrder}>
+      <TouchableOpacity
+        style={globalStyles.confirmButton}
+        onPress={handleConfirmOrder}
+      >
         <Text style={globalStyles.confirmButtonText}>Bekræft bestilling</Text>
       </TouchableOpacity>
     </ScrollView>

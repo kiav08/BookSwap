@@ -10,9 +10,8 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import {getDatabase, ref, update, remove } from "firebase/database";
-
-
+import { getDatabase, ref, update, remove } from "firebase/database";
+import globalStyles from "../styles/globalStyles";
 
 export default function EditBookDetails({ navigation, route }) {
   const [book, setBook] = useState(null);
@@ -102,57 +101,73 @@ export default function EditBookDetails({ navigation, route }) {
   }
 
   return (
-    <ScrollView style={styles.container}>
-    <View style={styles.container}>
-    {book.imageBase64 && (
+    <ScrollView style={globalStyles.container}>
+          {/* Back Button */}
+          <TouchableOpacity
+        style={globalStyles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={globalStyles.backButtonText}>Tilbage</Text>
+      </TouchableOpacity>
+      <View style={styles.container}>
+        {book.imageBase64 && (
           <Image
             source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
             style={styles.bookImage}
           />
         )}
-      {/* Editable input fields for book details */}
-      {["title", "author", "year", "subject", "price"].map((field, index) => (
-        <View style={styles.row} key={index}>
-          <Text style={styles.label}>
-            {field.charAt(0).toUpperCase() + field.slice(1)}:
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={book[field]}
-            onChangeText={(text) => setBook({ ...book, [field]: text })}
-          />
+        {/* Editable input fields for book details */}
+        {["title", "author", "year", "subject", "price"].map((field, index) => (
+          <View style={styles.row} key={index}>
+            <Text style={styles.label}>
+              {field.charAt(0).toUpperCase() + field.slice(1)}:
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={book[field]}
+              onChangeText={(text) => setBook({ ...book, [field]: text })}
+            />
+          </View>
+        ))}
+
+        {/* Non-editable status field */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Status:</Text>
+          <Text style={styles.value}>{book.status}</Text>
         </View>
-      ))}
 
-      {/* Non-editable status field */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Status:</Text>
-        <Text style={styles.value}>{book.status}</Text>
-      </View>
+        {/* Button to save changes */}
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={globalStyles.addButton}
+            onPress={handleSaveChanges}
+          >
+            <Text style={globalStyles.addButtonText}>Save Changes</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Button to save changes */}
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Button to toggle the status */}
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={globalStyles.addButton}
+            onPress={handleToggleStatus}
+          >
+            <Text style={globalStyles.addButtonText}>
+              {book.status === "sold" ? "Sælg igen" : "Bog solgt"}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Button to delete the book */}
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteBook}>
-          <Text style={styles.deleteButtonText}>Delete Book</Text>
-        </TouchableOpacity>
+        {/* Button to delete the book */}
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={globalStyles.addButton}
+            onPress={handleDeleteBook}
+          >
+            <Text style={globalStyles.addButtonText}>Delete Book</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {/* Button to toggle the status */}
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.soldButton} onPress={handleToggleStatus}>
-          <Text style={styles.soldButtonText}>
-            {book.status === "sold" ? "Sælg igen" : "Bog solgt"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
     </ScrollView>
   );
 }
@@ -186,51 +201,18 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#f5f5f5",
   },
-  saveButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    alignItems: "center",
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  deleteButton: {
-    backgroundColor: "red",
-    padding: 10,
-    alignItems: "center",
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  deleteButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  soldButton: {
-    backgroundColor: "green",
-    padding: 10,
-    alignItems: "center",
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  soldButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
   bookImage: {
-    width: "100%",  
-    height: 300,                
+    width: "100%",
+    height: 300,
     marginTop: 10,
     borderRadius: 15,
-    resizeMode: "cover",      
+    resizeMode: "cover",
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "#ddd",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2, 
+    shadowOpacity: 0.2,
     shadowRadius: 10,
   },
 });

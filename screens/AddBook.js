@@ -23,7 +23,7 @@ import { useNavigation } from "@react-navigation/native";
 import { auth } from "../FirebaseConfig"; // Import auth to get current user
 import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from "expo-file-system";
 import globalStyles from "../styles/globalStyles";
 
 /*=============== ADDBOOK-function ================ */
@@ -48,10 +48,7 @@ export default function AddBook() {
     subject: "",
     price: "",
     location: "",
-    university: "",
-    semester: "",
   };
-
 
   const [NewBook, setNewBook] = useState(initialState);
   const [imageUri, setImageUri] = useState(null);
@@ -68,29 +65,6 @@ export default function AddBook() {
     }
   };
 
-  // const uploadImageAsync = async (uri) => {
-  //   const blob = await new Promise((resolve, reject) => {
-  //     const xhr = new XMLHttpRequest();
-  //     xhr.onload = () => resolve(xhr.response);
-  //     xhr.onerror = reject;
-  //     xhr.responseType = "blob";
-  //     xhr.open("GET", uri, true);
-  //     xhr.send();
-  //   });
-
-  //   const storage = getStorage();
-  //   const imageRef = storageRef(
-  //     storage,
-  //     "bookImages/" + new Date().toISOString()
-  //   );
-  //   await uploadBytes(imageRef, blob);
-  //   const downloadURL = await getDownloadURL(imageRef);
-  //   blob.close();
-  //   return downloadURL;
-  // };
-
-  
-
   const changeTextInput = (name, event) => {
     setNewBook({ ...NewBook, [name]: event });
   };
@@ -98,7 +72,16 @@ export default function AddBook() {
   /* ============ HANDLE SAVE FUNCTION ============ */
   // Function to save the new book to Firebase
   const handleSave = async () => {
-    const { title, author, year, subject, price, location, university, semester} = NewBook;
+    const {
+      title,
+      author,
+      year,
+      subject,
+      price,
+      location,
+      university,
+      semester,
+    } = NewBook;
 
     if (
       title.length === 0 ||
@@ -106,10 +89,7 @@ export default function AddBook() {
       year.length === 0 ||
       subject.length === 0 ||
       price.length === 0 ||
-      location.length === 0 ||
-      university.length === 0 ||
-      semester.length === 0
-
+      location.length === 0
     ) {
       return Alert.alert("Error", "All fields must be filled.");
     }
@@ -178,8 +158,9 @@ export default function AddBook() {
       setImageUri(result.assets[0].uri);
     }
   };
-/* =========== OPENIMAGELIBRARY FUNCTION ============== */
-// Function to open image library and select a picture of the book
+
+  /* =========== OPENIMAGELIBRARY FUNCTION ============== */
+  // Function to open image library and select a picture of the book
   const openImageLibrary = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -201,6 +182,13 @@ export default function AddBook() {
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView>
+            {/* Back Button */}
+      <TouchableOpacity
+        style={globalStyles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={globalStyles.backButtonText}>Tilbage</Text>
+      </TouchableOpacity>
         {Object.keys(initialState).map((key, index) => {
           return (
             <View style={styles.row} key={index}>
@@ -218,27 +206,36 @@ export default function AddBook() {
           {imageUri && (
             <Image source={{ uri: imageUri }} style={styles.image} />
           )}
-          <TouchableOpacity onPress={openCamera} style={globalStyles.mainButton}>
+          <TouchableOpacity
+            onPress={openCamera}
+            style={globalStyles.mainButton}
+          >
             <Text style={globalStyles.mainButtonText}>Scan din bog</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={openCamera} style={globalStyles.mainButton}>
+          <TouchableOpacity
+            onPress={openCamera}
+            style={globalStyles.mainButton}
+          >
             <Text style={globalStyles.mainButtonText}>Åben Kamera</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={openImageLibrary} style={globalStyles.mainButton}>
+          <TouchableOpacity
+            onPress={openImageLibrary}
+            style={globalStyles.mainButton}
+          >
             <Text style={globalStyles.mainButtonText}>Åben Album</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={handleSave} style={globalStyles.addButton}>
-            <Text style={globalStyles.addButtonText}>Tilføj bog</Text>
-          </TouchableOpacity>
-          <Button
-            title={"Annuller"}
-            color={"#db8d16"}
-            onPress={() => {
-              navigation.navigate("Profile");
-            }}
-          />
+          <Text style={globalStyles.addButtonText}>Tilføj bog</Text>
+        </TouchableOpacity>
+        <Button
+          title={"Annuller"}
+          color={"#db8d16"}
+          onPress={() => {
+            navigation.navigate("Profile");
+          }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -247,13 +244,11 @@ export default function AddBook() {
 const styles = StyleSheet.create({
   row: {
     marginBottom: 15,
-
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
     fontWeight: "bold", // Optional: Makes the label bolder
-  
   },
   input: {
     height: 45,

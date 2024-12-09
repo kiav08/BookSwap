@@ -6,6 +6,7 @@ import { ScrollView } from "react-native";
 import { Image } from 'react-native';
 import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
 import * as Location from 'expo-location';  // Import Expo's Location API for geocoding
+import globalStyles from "../styles/globalStyles";
 
 
 
@@ -116,6 +117,13 @@ export default function BookDetails({ navigation, route }) {
   return (
     <ScrollView style={styles.container}>
     <View style={styles.container}>
+          {/* Back Button */}
+          <TouchableOpacity
+        style={globalStyles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={globalStyles.backButtonText}>Tilbage</Text>
+      </TouchableOpacity>
     <Image
       source={{ uri:`data:image/jpeg;base64,${book.imageBase64}` }}
       style={styles.bookImage}

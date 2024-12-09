@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import globalStyles from "../styles/globalStyles";
 
 // Define the users' points and rewards
 const PointScreen = ({ route, navigation }) => {
@@ -63,10 +64,10 @@ const PointScreen = ({ route, navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Back Button */}
       <TouchableOpacity
-        style={styles.backButton}
+        style={globalStyles.backButton}
         onPress={() => navigation.goBack()}
       >
-        <Text style={styles.backButtonText}>Tilbage</Text>
+        <Text style={globalStyles.backButtonText}>Tilbage</Text>
       </TouchableOpacity>
 
       {/* Points Section */}
@@ -102,18 +103,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F0F0E5",
     padding: 20,
-  },
-  backButton: {
-    alignSelf: "flex-start",
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: "#DB8D16",
-    borderRadius: 5,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFF",
   },
   heading: {
     fontSize: 24,

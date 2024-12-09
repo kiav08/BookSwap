@@ -9,6 +9,7 @@ import { Text, TouchableOpacity } from "react-native";
 import AddBook from "./screens/AddBook";
 import BookDetails from "./screens/BookDetails";
 import Chat from "./screens/Chat";
+import Chatmessages from "./screens/Chatmessages"
 import EditBook from "./screens/EditBook";
 import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
@@ -25,28 +26,9 @@ const HomepageStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Homepage" component={Homepage} />
-      <Stack.Screen
-        name="BookDetails"
-        component={BookDetails}
-        options={({ navigation }) => ({
-          headerShown: true,
-          headerTitle: "",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Homepage")} // Navigate back to Homepage
-              style={{ marginLeft: 10 }}
-            >
-              <Text style={{ color: "#DB8D16", fontSize: 16 }}>Tilbage</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-      <Stack.Screen
-        name="CheckOut"
-        component={CheckOut} // Include the Checkout screen
-        options={{
-          headerShown: true,
-          headerTitle: "CheckOut",
+      <Stack.Screen name="BookDetails" component={BookDetails}/>
+      <Stack.Screen name="CheckOut" component={CheckOut} // Include the Checkout screen
+        options={{ headerShown: true, headerTitle: "Bekræft køb",
         }}
       />
       <Stack.Screen name="Chat" component={Chat} />
@@ -64,20 +46,17 @@ const ProfileStack = () => {
       <Stack.Screen name="Chat" component={Chat} />
       <Stack.Screen name="PointScreen" component={PointScreen} />
       <Stack.Screen name="BookDetails" component={BookDetails} />
-
-
     </Stack.Navigator>
   );
 };
 
 // Stack for Chat
-const ChatStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Chat" component={Chat} />
-    </Stack.Navigator>
-  );
-};
+const ChatStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Chat" component={Chat} />
+    <Stack.Screen name="Chatmessages" component={Chatmessages} />
+  </Stack.Navigator>
+);
 
 // Bottom Tab Navigator
 const BottomNavigation = () => {
@@ -96,7 +75,7 @@ const BottomNavigation = () => {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatStack} // Use ChatStack instead of Chat
+        component={ChatStack} 
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" color={color} size={size} />

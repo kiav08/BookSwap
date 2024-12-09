@@ -1,34 +1,29 @@
-import React from "react";
-import { View, Text, FlatList, TouchableOpacity, Image } from "react-native";
-import globalStyles from "../styles/globalStyles";
-
-const users = [
-  {
-    id: "1",
-    name: "Julie",
-    message: "Book: VØS",
-    time: "Today",
-    avatar: "https://www.pngall.com/wp-content/uploads/12/Avatar-PNG-Photo.png",
-  },
-  {
-    id: "2",
-
-    message: "Book: Informationsteknologi",
-    time: "2 days ago",
-    avatar: "https://static.vecteezy.com/system/resources/thumbnails/008/846/297/small_2x/cute-boy-avatar-png.png",
-  },
-];
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { firestore } from '../FirebaseConfig';
 
 const Chat = ({ navigation }) => {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = firestore.collection('Users').onSnapshot((snapshot) => {
+      const userList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(userList);
+    });
+
+    return () => unsubscribe(); // Clean up listener
+  }, []);
+
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate("chatmessages", { userName: item.name })}>
-      <View style={globalStyles.itemContainer}>
-        <Image source={{ uri: item.avatar }} style={globalStyles.avatar} />
-        <View style={globalStyles.messageContainer}>
-          <Text style={globalStyles.name}>{item.name}</Text>
-          <Text style={globalStyles.message}>{item.message}</Text>
+    <TouchableOpacity onPress={() => navigation.navigate('Chatmessages', { userId: item.id, userName: item.name })}>
+      <View style={styles.itemContainer}>
+        <Image source={{ uri: item.avatar || 'default-avatar-url' }} style={styles.avatar} />
+        <View style={styles.messageContainer}>
+          <Text style={styles.name}>{item.name}</Text>
         </View>
-        <Text style={globalStyles.time}>{item.time}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -38,7 +33,7 @@ const Chat = ({ navigation }) => {
       data={users}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      style={globalStyles.list}
+      style={styles.list}
     />
   );
 };
