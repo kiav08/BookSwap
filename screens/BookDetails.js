@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"; 
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert, InputAccessoryView } from "react-native";
 import { auth } from "../FirebaseConfig";
 import { getDatabase, ref, update } from "firebase/database";
 import { ScrollView } from "react-native";
@@ -67,22 +67,42 @@ export default function BookDetails({ navigation, route }) {
   }
 
   /*=========== HANDLE WRITE TO SELLER FUNCTION ============*/
-  // Function to handle "Skriv til sælger"
-  const handleWriteToSeller = () => {
-    const currentUser = auth.currentUser;
+// Function to handle "Skriv til sælger"
+const handleWriteToSeller = () => {
+  const currentUser = auth.currentUser;
 
-    if (currentUser) {
-      // User is logged in, navigate to Chat screen
-      navigation.navigate("Profil", { screen: "Chat" });
-    } else {
-      // User is not logged in, alert and navigate to Profile
-      Alert.alert(
-        "Log ind nødvendig",
-        "Du skal logge ind eller oprette en bruger for at fortsætte."
-      );
-      navigation.navigate("Profil"); // Navigate to Profile screen to log in
-    }
-  };
+  if (currentUser) {
+    const db = getDatabase();
+    const chatId = `${currentUser.uid}_${book.sellerId}_${book.id}`; // Unique chatId with book id
+    const chatRef = ref(db, `chats/${chatId}`);
+
+    const newChat = {
+      senderId: currentUser.uid,
+      receiverId: book.sellerId,
+      bookTitle: book.title,
+      message: "Hej jeg er interesseret i " + book.title,
+      timestamp: Date.now(),
+    };
+
+    update(chatRef, newChat)
+      .then(() => {
+        Alert.alert("Success", "Chat oprettet. Du kan nu skrive til sælger.");
+        navigation.navigate("Chat", { chatId });
+      })
+      .catch((error) => {
+        console.error("Error creating chat:", error);
+        Alert.alert("Fejl", "Der skete en fejl under oprettelse af chat.");
+      });
+  } else {
+    Alert.alert(
+      "Log ind nødvendig",
+      "Du skal logge ind eller oprette en bruger for at fortsætte."
+    );
+    navigation.navigate("Profil");
+  }
+};
+
+
 
   /*=========== HANDLE PURCHASE FUNCTION ============*/
   // Function to handle "Køb"
@@ -130,7 +150,7 @@ export default function BookDetails({ navigation, route }) {
       />
 
       {/* Book details */}
-      {["title", "author", "year", "subject", "price", "location", "university", "semester"].map((field, index) => (
+      {["title", "author", "year", "subject", "price", "location"].map((field, index) => (
         <View style={styles.row} key={index}>
           <Text style={styles.label}>
             {field.charAt(0).toUpperCase() + field.slice(1)}:
@@ -204,7 +224,7 @@ const styles = StyleSheet.create({
   },
   buyButtonText: {
     fontSize: 14,
-    color: '#fff', // White text
+    color: '#fff', 
     fontFamily: 'abadi',
     fontWeight: "bold",
   },
@@ -217,7 +237,7 @@ const styles = StyleSheet.create({
   },
   chatButtonText: {
     fontSize: 14,
-    color: '#fff', // White text
+    color: '#fff',
     fontFamily: 'abadi',
     fontWeight: "bold",
 

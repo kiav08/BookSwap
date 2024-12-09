@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import globalStyles from "../styles/globalStyles";
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, set, update } from "firebase/database";
 import { auth } from "../FirebaseConfig";
 
 const saveOrder = async (order) => {
@@ -90,7 +90,7 @@ export default function CheckOut({ route, navigation }) {
       );
       return;
     }
-
+  
     const order = {
       bookTitle: book.title,
       bookPrice: book.price,
@@ -98,16 +98,33 @@ export default function CheckOut({ route, navigation }) {
       buyerInfo: form,
       orderDate: new Date().toISOString(),
     };
-
+  
     saveOrder(order);
-
+  
     const db = getDatabase();
-    const bookRef = ref(db, `books/${book.id}`);
-
-    set(bookRef, {
-      ...book,
-      status: "sold",
-    })
+    const bookRef = ref(db, `Books/${book.id}`);
+    const bookSoldRef = ref(db, `BookSold/${book.id}`);
+  
+    // Update the book's status to sold and move it to BookSold
+    update(bookRef, { status: "sold" })
+      .then(() => {
+        // Add the book to the BookSold node
+        return set(bookSoldRef, {
+          ...book,
+          status: "sold",
+          soldTo: {
+            name: form.name,
+            email: form.email,
+            address: form.address,
+            postalCode: form.postalCode,
+            phone: form.phone,
+          },
+        });
+      })
+      .then(() => {
+        // Remove the book from the Books node
+        return set(bookRef, null); // Setting the reference to null removes the node
+      })
       .then(() => {
         Alert.alert(
           "Bestilling bekræftet",
@@ -123,10 +140,11 @@ export default function CheckOut({ route, navigation }) {
         );
       })
       .catch((error) => {
-        console.error("Fejl under opdatering af bogstatus:", error);
-        Alert.alert("Fejl", "Kunne ikke opdatere bogstatus.");
+        console.error("Fejl under opdatering af bogstatus eller overførsel:", error);
+        Alert.alert("Fejl", "Kunne ikke opdatere bogstatus eller flytte data.");
       });
   };
+  
 
   return (
     <ScrollView style={globalStyles.container}>

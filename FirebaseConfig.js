@@ -1,5 +1,5 @@
-// firebaseConfig.js
 import { getApps, initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore"; // Tilføj denne import
 import {
   getAuth,
   initializeAuth,
@@ -7,7 +7,7 @@ import {
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Firebase configuration
+// Firebase-konfiguration
 const firebaseConfig = {
   apiKey: "AIzaSyB5q2uzhMmKzoNZw6QjEd1Wiof3dfBt_ps",
   authDomain: "my-app-4-88614.firebaseapp.com",
@@ -19,21 +19,13 @@ const firebaseConfig = {
   appId: "1:690679301727:web:c78007959fa72f8c6f3dea",
 };
 
-// let app;
-// if (getApps().length < 1) {
-//   app = initializeApp(firebaseConfig);
-//   console.log("Firebase Initialized");
-// }
-
-// // Initialize Firebase Auth with AsyncStorage persistence
-// const auth = initializeAuth(app, {
-//   persistence: getReactNativePersistence(AsyncStorage),
-// });
-
-// export { auth };
-
-// Initialize Firebase
+// Initialiser Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export Firebase Auth
-export const auth = getAuth(app);
+// Initialiser Firestore
+const firestore = getFirestore(app); // Sørg for, at denne linje fungerer
+
+// Initialiser Auth
+const auth = getAuth(app);
+
+export { firestore, auth };
