@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../FirebaseConfig";
-import { getDatabase, ref, update } from "firebase/database";
+import { getDatabase, ref, update, push, onValue, remove } from "firebase/database";
 import { ScrollView } from "react-native";
 import { Image } from "react-native";
 import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
@@ -16,6 +16,8 @@ export default function BookDetails({ navigation, route }) {
   // Usestate to store latitude and longitude
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false); 
+
 
   /* ========================= GET LOCATION COORDINATES FUNCTION ========================= */
   // Function to get latitude and longitude from a location string
@@ -62,14 +64,32 @@ export default function BookDetails({ navigation, route }) {
     fetchCoordinates();
   }, [book]);
 
+
+  // New useEffect for handling "Follow Book" functionality
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const db = getDatabase();
+      const followRef = ref(db, `users/${currentUser.uid}/followedBooks`);
+
+      // Check if this book is already followed
+      onValue(followRef, (snapshot) => {
+        const followedBooks = snapshot.val() || {};
+        const isBookFollowed = Object.values(followedBooks).some(
+          (followedBook) => followedBook.bookId === book?.id
+        );
+        setIsFollowing(isBookFollowed);
+      });
+    }
+  }, [book]); // Dependency on book to check follow status when book is set or changed
+
   if (!book) {
     return <Text>Loading...</Text>;
   }
-
   // Handle map loading
   if (latitude === null || longitude === null) {
     return <Text>Loading map...</Text>;
-  }
+  }  
 
   /*========================= HANDLE WRITE TO SELLER FUNCTION ========================= */
   // Function to handle the button "Skriv til sælger"
@@ -144,6 +164,64 @@ export default function BookDetails({ navigation, route }) {
   };
 
 
+  /*========================= HANDLE FOLLOW BOOK FUNCTION ========================= */
+    // Function to handle "Følg bog" button
+    const handleFollowBook = () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        Alert.alert(
+          "Log ind nødvendig",
+          "Du skal logge ind eller oprette en bruger for at fortsætte."
+        );
+        navigation.navigate("Profil");
+        return;
+      }
+    
+      const db = getDatabase();
+      const followRef = ref(db, `users/${currentUser.uid}/followedBooks`);
+
+    
+      if (isFollowing) {
+        // Stop med at følge bogen
+        onValue(followRef, (snapshot) => {
+          const followedBooks = snapshot.val() || {};
+          const bookKey = Object.keys(followedBooks).find(
+            (key) => followedBooks[key].bookId === book.id
+          );
+          if (bookKey) {
+            remove(ref(db, `users/${currentUser.uid}/followedBooks/${bookKey}`))
+              .then(() => {
+                setIsFollowing(false);
+                Alert.alert("Success", "Du følger ikke længere bogen.");
+              })
+              .catch((error) => {
+                console.error("Error unfollowing book:", error);
+                Alert.alert("Fejl", "Kunne ikke stoppe med at følge bogen.");
+              });
+          }
+        }, { onlyOnce: true });
+      } else {
+        // Følg bogen
+        const newFollow = {
+          bookId: book.id,
+          title: book.title,
+          author: book.author,
+          price: book.price,
+          imageBase64: book.imageBase64 || null,
+        };
+        push(followRef, newFollow)
+          .then(() => {
+            setIsFollowing(true);
+            Alert.alert("Success", "Bogen er nu fulgt.");
+          })
+          .catch((error) => {
+            console.error("Error following book:", error);
+            Alert.alert("Fejl", "Kunne ikke følge bogen.");
+          });
+      }
+    };
+
+
   /* ========================= RETURN ========================= */
   return (
     <ScrollView style={styles.container}>
@@ -196,6 +274,16 @@ export default function BookDetails({ navigation, route }) {
           onPress={handleWriteToSeller}
         >
           <Text style={styles.chatButtonText}>Skriv til sælger</Text>
+        </TouchableOpacity>
+
+         {/* Follow Book button */}
+         <TouchableOpacity
+          style={styles.chatButton}
+          onPress={handleFollowBook}
+        >
+          <Text style={styles.chatButtonText}>
+          {isFollowing ? "Følg ikke bog længere" : "Følg bog"}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TouchableOpacity } from "react-native";
+
 
 // Importing screens
 import AddBook from "./screens/AddBook";
@@ -14,7 +14,7 @@ import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
 import PointScreen from "./screens/PointScreen";
 import CheckOut from "./screens/CheckOut";
-
+import FollowedBook from "./screens/FollowedBook";
 // Creating navigators
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -44,6 +44,8 @@ const ProfileStack = () => {
       <Stack.Screen name="Chat" component={Chat} />
       <Stack.Screen name="PointScreen" component={PointScreen} />
       <Stack.Screen name="BookDetails" component={BookDetails} />
+      <Stack.Screen name="FollowedBook" component={FollowedBook} />
+
     </Stack.Navigator>
   );
 };

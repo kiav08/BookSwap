@@ -12,12 +12,18 @@ import {
 } from "react-native";
 import { getDatabase, ref, update, remove } from "firebase/database";
 import globalStyles from "../styles/globalStyles";
+import { getAuth } from "firebase/auth";
+
 
 /* ========================= EDITBOOK FUNCTION ========================= */
 //function that allows the user to edit the details of a book
 export default function EditBookDetails({ navigation, route }) {
   // State for the book details
   const [book, setBook] = useState(null);
+
+const auth = getAuth();
+const currentUser = auth.currentUser;
+
 
   // Get the book from the route params
   useEffect(() => {
@@ -41,22 +47,34 @@ export default function EditBookDetails({ navigation, route }) {
     if (!book || !book.id) {
       return Alert.alert("Error", "Book data is missing.");
     }
+    if (!currentUser) {
+      return Alert.alert("Error", "User is not authenticated.");
+    }
 
     // Get a reference to the database
     const db = getDatabase();
     const bookRef = ref(db, `Books/${book.id}`);
+    const followRef = ref(db, `users/${currentUser.uid}/followedBooks/${book.id}`);
 
-    // Update book details
-    update(bookRef, book)
-      .then(() => {
-        Alert.alert("Success", "Book details updated successfully!");
-        navigation.goBack();
-      })
-      .catch((error) => {
-        console.error("Error updating book:", error);
-        Alert.alert("Error", "Failed to update the book.");
-      });
-  };
+  // Update book details
+  update(bookRef, book)
+    .then(() => {
+      // After updating the book, update the followedBooks list as well
+      update(followRef, book)
+        .then(() => {
+          Alert.alert("Success", "Book details updated successfully!");
+          navigation.goBack();
+        })
+        .catch((error) => {
+          console.error("Error updating followed book:", error);
+          Alert.alert("Error", "Failed to update followed book price.");
+        });
+    })
+    .catch((error) => {
+      console.error("Error updating book:", error);
+      Alert.alert("Error", "Failed to update the book.");
+    });
+};
 
   // Function to handle deleting the book
   const handleDeleteBook = () => {

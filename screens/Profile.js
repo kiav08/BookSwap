@@ -290,6 +290,13 @@ export default function Profile() {
         <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
       </TouchableOpacity>
 
+      {/* Se dine fulgte bøger Button */}
+      <TouchableOpacity
+      style={globalStyles.addButton} 
+      onPress={() => navigation.navigate("FollowedBook")}>
+      <Text style={globalStyles.addButtonText}>Se bøger du følger</Text>
+      </TouchableOpacity>
+
       <View style={globalStyles.separator} />
 
       {/* User's boks*/}
@@ -339,12 +346,6 @@ export default function Profile() {
       </View>
 
       <View style={globalStyles.separator} />
-
-      {/* User's followed titles */}
-      <View style={globalStyles.sectionContainer}>
-        <Text style={globalStyles.heading}>Titler du følger</Text>
-        <View style={globalStyles.gridContainer}></View>
-      </View>
 
       <TouchableOpacity
         style={styles.logoutButton}

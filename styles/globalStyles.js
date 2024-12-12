@@ -134,6 +134,12 @@ const globalStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFF",
   },
+  gridContainers: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
 });
 
 export default globalStyles;
