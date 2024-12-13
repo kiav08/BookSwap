@@ -47,6 +47,7 @@ const globalStyles = StyleSheet.create({
   box: { //vrd ikke 
     backgroundColor: "#fff",
     borderRadius: 5,
+    alignItems: "center",
     margin: 10,
     padding: 10,
     shadowColor: "#000",
@@ -56,25 +57,32 @@ const globalStyles = StyleSheet.create({
     elevation: 3,
     flex: 1,
     flexBasis: "40%",
-    maxWidth: "40%",
+    maxWidth: "50%",
   },
 
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 10,
   },
   boxText: {
     color: "#000", // White text
     fontWeight: "bold",
-    textAlign: "center",
-    fontSize: 16,
+    textAlign: "left",
+    fontSize: 13,
   },
   boxTextSmall: {
     color: "#000", // White text
     fontSize: 12,
-    textAlign: "center",
+    textAlign: "left",
+    paddingBottom: 5,
+  },
+  boxTextPris: {
+    color: "#000", // White text
+    fontSize: 12,
+    textAlign: "left",
+    paddingBottom: 5,
   },
   separator: {
     height: 1,
@@ -82,7 +90,7 @@ const globalStyles = StyleSheet.create({
     marginVertical: 20,
     width: "100%",
     alignSelf: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   addButton: {
     flex: 1,
@@ -102,19 +110,17 @@ const globalStyles = StyleSheet.create({
   },
   bookImage: {
     width: "100%",
-    height: "150",
+    height: "170",
     resizeMode: "cover",
     borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   sectionContainer: {
-    marginBottom: 10,
     borderRadius: 5,
-    padding: 10,
     borderRadius: 10,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
@@ -138,7 +144,7 @@ const globalStyles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: 20,
+    alignItems: "center",
   },
 });
 

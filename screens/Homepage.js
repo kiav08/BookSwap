@@ -264,10 +264,7 @@ export default function Homepage({ navigation }) {
       {/* Display a banner */}
       <View style={styles.stepContainer}>
         <Text style={styles.highlightedSubtitleText}>
-          Del og opdag brugte bøger
-        </Text>
-        <Text style={styles.descriptionText}>
-          Find din næste yndlingsbog blandt vores udvalg👇
+        Find dine næste studiebøger på få klik!
         </Text>
       </View>
 
@@ -335,33 +332,46 @@ export default function Homepage({ navigation }) {
       <View style={globalStyles.sectionContainer}>
         <View style={styles.gridContainers}>
           {filteredBooks.map((book) => (
-            <View key={book.id} style={globalStyles.box}>
+            <View key={book.id} style={[globalStyles.box, { position: "relative" }]}>
               <Image
                 source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
                 style={globalStyles.bookImage}/>
-              <TouchableOpacity onPress={() => handleSelectBook(book.id)}>
+              <TouchableOpacity onPress={() => handleSelectBook(book.id)} style={{ width: "100%" }}>
                 <Text style={globalStyles.boxText}>{book.title}</Text>
-                <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+                <Text style={globalStyles.boxTextSmall}>Af {book.author}</Text>
+                <Text style={globalStyles.boxTextPris}>{book.price} DKK </Text>
                 <Text style={globalStyles.boxTextSmall}>
                   {book.subject || "No subject"}
                 </Text>
               </TouchableOpacity>
 
-              {/* Display the like button */}
-              <TouchableOpacity onPress={() => toggleLike(book.id)}>
-                <FontAwesome
-                  name={book.liked ? "heart" : "heart-o"}
-                  size={24}
-                  color={book.liked ? "#FF0000" : "#000"}
-                />
-              </TouchableOpacity>
+  {/* Display the like button */}
+  <TouchableOpacity
+    onPress={() => toggleLike(book.id)}
+    style={{
+      position: "absolute",
+      bottom: 5, 
+      right: 5, 
+    }}
+  >
+    <FontAwesome
+      name={book.liked ? "heart" : "heart-o"}
+      size={20}
+      color={book.liked ? "#FF0000" : "#000"}
+    />
+  </TouchableOpacity>
             </View>
           ))}
         </View>
       </View>
+      
+      <View style={globalStyles.separator} />
+
     </ScrollView>
   );
 }
+
+
 
 /* ========================= STYLES ========================= */
 const styles = StyleSheet.create({
@@ -435,17 +445,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: "#000",
     elevation: 5,
-    marginBottom: 20,
     width: "100%",
+    borderRadius: 10,
   },
   highlightedSubtitleText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#FFFFFF",
     textAlign: "center",
     marginBottom: 10,
     textShadowColor: "#000000",
     textShadowRadius: 3,
+    padding:20,
   },
   descriptionText: {
     fontSize: 14,
@@ -472,6 +483,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: 20,
   },
 })
