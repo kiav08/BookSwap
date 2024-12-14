@@ -7,75 +7,83 @@ export default function NotificationsScreen() {
   const [priceChanges, setPriceChanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);  // Local state to hold the user
-  const [newChanges, setNewChanges] = useState([]);  // State to track new changes for visual effect
+  const [newChanges, setNewChanges] = useState([]); 
+  const [currentUser, setCurrentUser] = useState(null); // State for current user
   const auth = getAuth();
 
+  // Check auth state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user);  // Set the current user when logged in
-      } else {
-        setError("User is not logged in");
-        setCurrentUser(null);  // Reset user when not logged in
+      if (user){
+        setCurrentUser(user);
+        console.log('User is logged in:', user);
       }
-      setLoading(false);  // Stop loading after auth check
+      if (user) {
+        // Fetch user data if logged in
+        fetchPriceChanges(user.uid);
+      } else {
+        console.log('No user is logged in', user);
+        setCurrentUser(null);
+      }
     });
+    
+    return () => unsubscribe(); // Unsubscribe on component unmount
+  }, []);
 
-    return () => unsubscribe();  // Cleanup the listener when the component unmounts
-  }, [auth]);
-
-  useEffect(() => {
-    if (!currentUser) return;  // Do nothing if there's no user
-
+  // Function to fetch price changes
+  const fetchPriceChanges = (uid) => {
     const db = getDatabase();
-    const followedBooksRef = ref(db, `users/${currentUser.uid}/followedBooks`);
+    const followedBooksRef = ref(db, `users/${uid}/followedBooks`);
 
-    // Listen for changes in followed books
-    onValue(followedBooksRef, (snapshot) => {
-      const data = snapshot.val();
-      const changesArray = [];
+    const unsubscribe = onValue(
+      followedBooksRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        const changesArray = [];
 
-      if (data) {
-        for (const bookId in data) {
-          if (data.hasOwnProperty(bookId)) {
+        if (data) {
+          Object.keys(data).forEach((bookId) => {
             const book = data[bookId];
-
-            // Log changes (assuming price change is relevant)
             if (book.price) {
               changesArray.push({
                 bookTitle: book.title,
                 newPrice: book.price,
                 timestamp: Date.now(),
-                id: bookId,  // Add book ID to track individual changes
+                id: bookId,
               });
             }
-          }
+          });
+
+          setPriceChanges(changesArray);
+          setNewChanges(changesArray); // Mark as new changes
+        } else {
+          setError('No followed books found');
         }
-        setPriceChanges(changesArray);
-        setNewChanges(changesArray);  // Set the changes as 'new'
-      } else {
-        setError("No data found");
+
+        setLoading(false);
+      },
+      (error) => {
+        setError('Error fetching followed books');
+        console.error(error);
+        setLoading(false);
       }
-    });
+    );
 
-    return () => {
-      setPriceChanges([]); // Cleanup state on unmount
-    };
-  }, [currentUser]);  // Runs when currentUser changes
+    return () => unsubscribe();
+  };
 
-  // Handle visual change effect for new changes
   const handleChangeVisualEffect = (bookId) => {
-    // Remove the change from newChanges after a brief time (to reset the visual effect)
     setTimeout(() => {
-      setNewChanges((prevChanges) => prevChanges.filter((change) => change.id !== bookId));
-    }, 3000);  // Keep the visual effect for 3 seconds
+      setNewChanges((prevChanges) =>
+        prevChanges.filter((change) => change.id !== bookId)
+      );
+    }, 3000);
   };
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -83,60 +91,124 @@ export default function NotificationsScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
+///////////////////////////RETURN-STATEMENT/////////////////////////////
   return (
-    <ScrollView style={styles.container}>
-      {priceChanges.length === 0 ? (
-        <Text>No price changes yet.</Text>
-      ) : (
-        priceChanges.map((change, index) => (
-          <View
-            key={index}
-            style={[
-              styles.changeItem,
-              newChanges.some((newChange) => newChange.id === change.id)
-                ? styles.newChangeItem // Apply a special style for new changes
-                : {},
-            ]}
-            onLayout={() => handleChangeVisualEffect(change.id)} // Trigger visual effect when rendered
-          >
-            <Text style={styles.bookTitle}>Book: {change.bookTitle}</Text>
-            <Text style={styles.priceChange}>New Price: {change.newPrice} DKK</Text>
-            <Text style={styles.timestamp}>Date: {new Date(change.timestamp).toLocaleString()}</Text>
-          </View>
-        ))
-      )}
-    </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.banner}>
+        <Text style={styles.bannerText}>
+          Følg med i prisændringerne på de bøger, du følger her.
+        </Text>
+      </View>
+
+      <View style={styles.separator} />
+
+      <ScrollView style={styles.scrollView}>
+        {priceChanges.length === 0 ? (
+          <Text style={styles.noChangesText}>Ingen prisændringer endnu.</Text>
+        ) : (
+          priceChanges.map((change, index) => (
+            <View
+              key={index}
+              style={[styles.changeItem, newChanges.some((newChange) => newChange.id === change.id) ? styles.newChangeItem : {}]}
+              onLayout={() => handleChangeVisualEffect(change.id)}
+            >
+              <Text style={styles.bookTitle}>Bogen: {change.bookTitle}</Text>
+              <Text style={styles.priceChange}>Ny pris: {change.newPrice} DKK</Text>
+              <Text style={styles.timestamp}>Dato: {new Date(change.timestamp).toLocaleString()}</Text>
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F0F0E5',
+  },
+  banner: {
+    margin: 20,
+    marginTop: 50,
+    backgroundColor: '#DB8D16',
+    padding: 15,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  bannerText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  bannerTexti: {
+    color: '#000',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  scrollView: {
     padding: 20,
   },
   changeItem: {
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-    paddingTop: 10,
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    padding: 15,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
   newChangeItem: {
-    backgroundColor: '#d3f8d3',  // Light green background for new changes
+    backgroundColor: '#fff',
     borderLeftWidth: 5,
-    borderLeftColor: '#4CAF50',  // Green border to highlight the new change
+    borderLeftColor: '#DB8D16',
   },
   bookTitle: {
     fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
   },
   priceChange: {
-    color: 'green',
+    fontSize: 14,
+    color: '#388E3C',
+    marginBottom: 5,
   },
   timestamp: {
-    color: 'gray',
+    fontSize: 12,
+    color: '#757575',
+  },
+  noChangesText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#757575',
+  },
+  loadingText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#757575',
+    marginTop: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#d32f2f',
+    marginTop: 20,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: "#000",
+    marginVertical: 20,
+    width: "100%",
+    alignSelf: "center",
+    marginBottom: 10,
   },
 });

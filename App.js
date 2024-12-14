@@ -56,6 +56,13 @@ const ChatStack = () => (
   </Stack.Navigator>
 );
 
+// Stack for NotificationsScreen
+const NotificationsScreenStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
+  </Stack.Navigator>
+);
+
 // Bottom Tab Navigator
 const BottomNavigation = () => {
   return (
@@ -94,8 +101,8 @@ const BottomNavigation = () => {
         }}
       />
        <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen} // Tilføj NotificationsScreen
+        name="Notifikationer"
+        component={NotificationsScreenStack} 
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="notifications" color={color} size={size} />
