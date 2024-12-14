@@ -193,7 +193,7 @@ export default function Profile() {
           setFollowedBooks([]);  // Optional: Clear the list if there's an error
         });        
       }
-    }, []);  
+    }, [user]);  
 
   /* ==================== LOGIN ==================== */
   if (!user) {
@@ -369,11 +369,14 @@ export default function Profile() {
 
       <View style={globalStyles.separator} />
 
-      <View style={globalStyles.sectionContainer}>
+{/* User's followed books */}
+<View style={globalStyles.sectionContainer}>
   <Text style={globalStyles.heading}>Titler du følger</Text>
   <View style={globalStyles.gridContainer}>
     {/* Check if there are followed books */}
-    {followedBooks.length > 0 ? (
+    {followedBooks.length === 0 ? (
+    <Text>Du følger ingen bøger endnu</Text>
+    ) : (
       followedBooks.map((book, index) => (
         <TouchableOpacity
           key={index}
@@ -384,21 +387,18 @@ export default function Profile() {
             source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
             style={globalStyles.bookImage}
           />
-              <Text style={globalStyles.boxText}>{book.title}</Text>
-              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
-              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
-              <Text style={styles.bookPrice}>{book.price} DKK</Text>
+          <Text style={globalStyles.boxText}>{book.title}</Text>
+          <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+          <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
 
-                <TouchableOpacity
-                  style={styles.viewButton}
-                  onPress={() => navigation.navigate("BookDetails", { book: book })}>
-                  <Text style={styles.viewButtonText}>Se detaljer</Text>
-                </TouchableOpacity>
-          
+          <TouchableOpacity
+            style={styles.viewButton}
+            onPress={() => navigation.navigate("BookDetails", { book: book })}
+          >
+            <Text style={styles.viewButtonText}>Se detaljer</Text>
+          </TouchableOpacity>
         </TouchableOpacity>
       ))
-    ) : (
-      <Text style={styles.noBooksText}>Du følger ikke nogen bøger endnu.</Text>
     )}
   </View>
 </View>
