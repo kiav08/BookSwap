@@ -14,6 +14,7 @@ import Homepage from "./screens/Homepage";
 import Profile from "./screens/Profile";
 import PointScreen from "./screens/PointScreen";
 import CheckOut from "./screens/CheckOut";
+import NotificationsScreen from "./screens/NotificationsScreen";
 
 // Creating navigators
 const Stack = createStackNavigator();
@@ -87,6 +88,17 @@ const BottomNavigation = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" color={color} size={size} />
+          ),
+          tabBarActiveTintColor: "#156056",
+          tabBarInactiveTintColor: "#8C806F",
+        }}
+      />
+       <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen} // Tilføj NotificationsScreen
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications" color={color} size={size} />
           ),
           tabBarActiveTintColor: "#156056",
           tabBarInactiveTintColor: "#8C806F",

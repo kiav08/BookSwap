@@ -188,7 +188,10 @@ export default function Profile() {
           } else {
             setFollowedBooks([]);
           }
-        });
+        }, (error) => {
+          console.error("Error fetching followed books:", error);
+          setFollowedBooks([]);  // Optional: Clear the list if there's an error
+        });        
       }
     }, []);  
 
@@ -352,7 +355,6 @@ export default function Profile() {
               <Text style={globalStyles.boxText}>{book.title}</Text>
               <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
               <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
-              <Text style={styles.bookPrice}>{book.price} DKK</Text>
 
               <TouchableOpacity
                   style={styles.viewButton}
