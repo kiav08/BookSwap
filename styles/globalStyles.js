@@ -99,7 +99,7 @@ const globalStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#8C806F",
     paddingVertical: 15,
-    paddingHorizontal: 100,
+    paddingHorizontal: 90,
     borderRadius: 10,
   },
   addButtonText: {
@@ -107,6 +107,16 @@ const globalStyles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "abadi",
     fontWeight: "bold",
+  },
+  BoostButton: {
+    flex: 1,
+    marginTop: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#156056",
+    paddingVertical: 15,
+    paddingHorizontal: 100,
+    borderRadius: 10,
   },
   bookImage: {
     width: "100%",
@@ -125,6 +135,20 @@ const globalStyles = StyleSheet.create({
     textAlign: "center",
     color: "#333",
     marginBottom: 10,
+  },
+  mainButton: {
+    marginTop: 0,
+    backgroundColor: "#DB8D16",
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 25,
+    marginBottom: 10,
+  },
+  uploadpicText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFF",
+    textAlign: "center",
   },
     /* ========================= BACK BUTTON ========================= */
 

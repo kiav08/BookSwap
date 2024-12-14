@@ -10,10 +10,9 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { getDatabase, ref, update, remove } from "firebase/database";
+import { getDatabase, ref, update, remove, onValue } from "firebase/database";
 import globalStyles from "../styles/globalStyles";
 import { getAuth } from "firebase/auth";
-
 
 /* ========================= EDITBOOK FUNCTION ========================= */
 //function that allows the user to edit the details of a book
@@ -21,9 +20,8 @@ export default function EditBookDetails({ navigation, route }) {
   // State for the book details
   const [book, setBook] = useState(null);
 
-const auth = getAuth();
-const currentUser = auth.currentUser;
-
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
   // Get the book from the route params
   useEffect(() => {
@@ -50,53 +48,80 @@ const currentUser = auth.currentUser;
     if (!currentUser) {
       return Alert.alert("Error", "User is not authenticated.");
     }
-
+  
     // Get a reference to the database
     const db = getDatabase();
     const bookRef = ref(db, `Books/${book.id}`);
     const followRef = ref(db, `users/${currentUser.uid}/followedBooks/${book.id}`);
-
-  // Update book details
-  update(bookRef, book)
-    .then(() => {
-      // After updating the book, update the followedBooks list as well
-      update(followRef, book)
-        .then(() => {
+  
+    // Update the book details
+    update(bookRef, book)
+      .then(() => {
+        // Update only the price for followed books
+        if (book.status !== "sold") {
+          update(followRef, { price: book.price })
+            .then(() => {
+              Alert.alert("Success", "Book details updated successfully!");
+              navigation.goBack();
+            })
+            .catch((error) => {
+              console.error("Error updating followed book:", error);
+              Alert.alert("Error", "Failed to update followed book price.");
+            });
+        } else {
           Alert.alert("Success", "Book details updated successfully!");
           navigation.goBack();
-        })
-        .catch((error) => {
-          console.error("Error updating followed book:", error);
-          Alert.alert("Error", "Failed to update followed book price.");
-        });
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating book:", error);
+        Alert.alert("Error", "Failed to update the book.");
+      });
+  };
+  
+
+// Function to handle deleting the book
+const handleDeleteBook = () => {
+  if (!book || !book.id) {
+    return Alert.alert("Error", "Book data is missing.");
+  }
+
+  const db = getDatabase();
+  const bookRef = ref(db, `Books/${book.id}`);
+  const followRef = ref(db, `users/${currentUser.uid}/followedBooks`);
+
+  // Remove the book from the "Books" collection
+  remove(bookRef)
+    .then(() => {
+      // After the book is deleted from "Books", check followedBooks
+      onValue(followRef, (snapshot) => {
+        const followedBooks = snapshot.val() || {};
+        const bookKey = Object.keys(followedBooks).find(
+          (key) => followedBooks[key].bookId === book.id
+        );
+        if (bookKey) {
+          // Remove the book from followedBooks
+          remove(ref(db, `users/${currentUser.uid}/followedBooks/${bookKey}`))
+            .then(() => {
+              Alert.alert("Success", "Book deleted from both your collection and followed books.");
+              navigation.goBack(); // Optionally navigate back after deletion
+            })
+            .catch((error) => {
+              console.error("Error removing from followedBooks:", error);
+              Alert.alert("Error", "Failed to remove book from followed books.");
+            });
+        } else {
+          Alert.alert("Success", "Book deleted successfully!");
+          navigation.goBack(); // Navigate back if no book was followed
+        }
+      });
     })
     .catch((error) => {
-      console.error("Error updating book:", error);
-      Alert.alert("Error", "Failed to update the book.");
+      console.error("Error deleting book:", error);
+      Alert.alert("Error", "Failed to delete the book.");
     });
 };
 
-  // Function to handle deleting the book
-  const handleDeleteBook = () => {
-    if (!book || !book.id) {
-      return Alert.alert("Error", "Book data is missing.");
-    }
-
-    // Get a reference to the database
-    const db = getDatabase();
-    const bookRef = ref(db, `Books/${book.id}`);
-
-    // Remove the book from the database
-    remove(bookRef)
-      .then(() => {
-        Alert.alert("Success", "Book deleted successfully!");
-        navigation.goBack();
-      })
-      .catch((error) => {
-        console.error("Error deleting book:", error);
-        Alert.alert("Error", "Failed to delete the book.");
-      });
-  };
 
   // Function to handle marking the book as sold or setting it to active
   const handleToggleStatus = () => {
@@ -123,6 +148,8 @@ const currentUser = auth.currentUser;
   if (!book) {
     return <Text>No data</Text>;
   }
+
+  
 
   /* ========================= RETURN ========================= */
 
@@ -162,13 +189,29 @@ const currentUser = auth.currentUser;
           <Text style={styles.value}>{book.status}</Text>
         </View>
 
+        {/* Button to boost listing */}
+        <View style={styles.row}>
+       <TouchableOpacity
+        style={globalStyles.BoostButton}
+         onPress={() =>
+         Alert.alert(
+        "Boost Opslag",
+        "Betal 10 kr. for at booste dit opslag",
+        [{ text: "OK" }]
+         )
+         }
+         >
+        <Text style={globalStyles.addButtonText}>Boost Opslag</Text>
+         </TouchableOpacity>
+        </View>
+        
         {/* Button to save changes */}
         <View style={styles.row}>
           <TouchableOpacity
             style={globalStyles.addButton}
             onPress={handleSaveChanges}
           >
-            <Text style={globalStyles.addButtonText}>Save Changes</Text>
+            <Text style={globalStyles.addButtonText}>Gem ændringer</Text>
           </TouchableOpacity>
         </View>
 

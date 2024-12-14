@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { auth } from "../FirebaseConfig";
-import { getDatabase, ref, update, push, onValue, remove } from "firebase/database";
+import { getDatabase, ref, update, push, onValue, remove, set } from "firebase/database";
 import { ScrollView } from "react-native";
 import { Image } from "react-native";
 import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
@@ -209,17 +209,20 @@ export default function BookDetails({ navigation, route }) {
           price: book.price,
           imageBase64: book.imageBase64 || null,
         };
-        push(followRef, newFollow)
-          .then(() => {
-            setIsFollowing(true);
-            Alert.alert("Success", "Bogen er nu fulgt.");
-          })
-          .catch((error) => {
-            console.error("Error following book:", error);
-            Alert.alert("Fejl", "Kunne ikke følge bogen.");
-          });
-      }
-    };
+
+    // Brug "set()" i stedet for "push()" for at opdatere den eksisterende bog
+    const bookRef = ref(db, `users/${currentUser.uid}/followedBooks/${book.id}`);
+    set(bookRef, newFollow)
+      .then(() => {
+        setIsFollowing(true);
+        Alert.alert("Success", "Bogen er nu fulgt.");
+      })
+      .catch((error) => {
+        console.error("Error following book:", error);
+        Alert.alert("Fejl", "Kunne ikke følge bogen.");
+      });
+  }
+};
 
 
   /* ========================= RETURN ========================= */

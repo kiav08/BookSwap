@@ -36,6 +36,7 @@ export default function Profile() {
   const [createPassword, setCreatePassword] = useState("");
   const [points, setPoints] = useState(0);
   const [userProfile, setUserProfile] = useState({});
+  const [followedBooks, setFollowedBooks] = useState([]);
   const navigation = useNavigation();
 
   // Check auth state and fetch user data
@@ -171,6 +172,26 @@ export default function Profile() {
     );
   };
 
+    // Fetch followed books from Firebase
+    useEffect(() => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const db = getDatabase();
+        const followRef = ref(db, `users/${currentUser.uid}/followedBooks`);
+  
+        // Listen for changes in the followedBooks data
+        onValue(followRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const books = Object.values(data); // Convert the followed books object into an array
+            setFollowedBooks(books);
+          } else {
+            setFollowedBooks([]);
+          }
+        });
+      }
+    }, []);  
+
   /* ==================== LOGIN ==================== */
   if (!user) {
     return (
@@ -240,61 +261,45 @@ export default function Profile() {
                 borderRadius: 45,
                 marginRight: 10,
                 borderWidth: 3,
+                borderColor: "#DB8D16", // Optional for a colored border
+                marginBottom: 15, // Space below the picture
               }}
             />
           </View>
+
           <View>
             <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 5 }}>
               Velkommen
             </Text>
-            <Text style={{ fontSize: 18, color: "#757575" }}>{user.email}</Text>
+            <Text style={{ fontSize: 18, color: "#757575", marginBottom: 15 }}>{user.email}</Text>
 
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("PointScreen", { points });
-              }}
-              style={{
-                marginTop: 10,
-                backgroundColor: "#DB8D16",
-                borderRadius: 20,
-                paddingVertical: 5,
-                paddingHorizontal: 25,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  color: "#FFF",
-                  textAlign: "center",
-                }}
-              >
-                {points} point
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          <TouchableOpacity
+          onPress={() => navigation.navigate("PointScreen", { points })}
+          style={globalStyles.mainButton} // Fixed style syntax
+          >
+         <Text style={[globalStyles.uploadpicText, { fontSize: 18 }]}>
+         {points} point
+         </Text>
+        </TouchableOpacity>
+
         {/* Upload picture button */}
         <TouchableOpacity
           onPress={handleUploadPicture}
           style={globalStyles.mainButton}
         >
-          <Text style={styles.uploadpicText}>Upload profilbillede</Text>
+          <Text style={globalStyles.uploadpicText}>Upload billede</Text>
         </TouchableOpacity>
       </View>
+      </View>
+      </View>
+
+
 
       <View style={globalStyles.separator} />
 
       {/* Add Book Button */}
       <TouchableOpacity style={globalStyles.addButton} onPress={handleAddBook}>
         <Text style={globalStyles.addButtonText}>Opret ny annonce</Text>
-      </TouchableOpacity>
-
-      {/* Se dine fulgte bøger Button */}
-      <TouchableOpacity
-      style={globalStyles.addButton} 
-      onPress={() => navigation.navigate("FollowedBook")}>
-      <Text style={globalStyles.addButtonText}>Se bøger du følger</Text>
       </TouchableOpacity>
 
       <View style={globalStyles.separator} />
@@ -316,6 +321,13 @@ export default function Profile() {
               <Text style={globalStyles.boxText}>{book.title}</Text>
               <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
               <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+              <Text style={styles.bookPrice}>{book.price} DKK</Text>
+
+<TouchableOpacity
+    style={styles.viewButton}
+    onPress={() => navigation.navigate("BookDetails", { book: book })}>
+    <Text style={styles.viewButtonText}>Se detaljer</Text>
+</TouchableOpacity>
             </TouchableOpacity>
           ))}
         </View>
@@ -340,10 +352,54 @@ export default function Profile() {
               <Text style={globalStyles.boxText}>{book.title}</Text>
               <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
               <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+              <Text style={styles.bookPrice}>{book.price} DKK</Text>
+
+              <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => navigation.navigate("BookDetails", { book: book })}>
+                  <Text style={styles.viewButtonText}>Se detaljer</Text>
+              </TouchableOpacity>
+
             </TouchableOpacity>
           ))}
         </View>
       </View>
+
+      <View style={globalStyles.separator} />
+
+      <View style={globalStyles.sectionContainer}>
+  <Text style={globalStyles.heading}>Titler du følger</Text>
+  <View style={globalStyles.gridContainer}>
+    {/* Check if there are followed books */}
+    {followedBooks.length > 0 ? (
+      followedBooks.map((book, index) => (
+        <TouchableOpacity
+          key={index}
+          style={globalStyles.box}
+          onPress={() => navigation.navigate("BookDetails", { book: book })}
+        >
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${book.imageBase64}` }}
+            style={globalStyles.bookImage}
+          />
+              <Text style={globalStyles.boxText}>{book.title}</Text>
+              <Text style={globalStyles.boxTextSmall}>{book.author}</Text>
+              <Text style={globalStyles.boxTextSmall}>({book.year})</Text>
+              <Text style={styles.bookPrice}>{book.price} DKK</Text>
+
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => navigation.navigate("BookDetails", { book: book })}>
+                  <Text style={styles.viewButtonText}>Se detaljer</Text>
+                </TouchableOpacity>
+          
+        </TouchableOpacity>
+      ))
+    ) : (
+      <Text style={styles.noBooksText}>Du følger ikke nogen bøger endnu.</Text>
+    )}
+  </View>
+</View>
 
       <View style={globalStyles.separator} />
 
@@ -393,7 +449,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 30,
   },
-
+  viewButton: {
+    backgroundColor: "#DB8D16",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  viewButtonText: {
+    color: "#fff",
+  },
   logoutButton: {
     backgroundColor: "#8C806F",
     padding: 15,
