@@ -233,7 +233,7 @@ const handleDeleteBook = () => {
             style={globalStyles.addButton}
             onPress={handleDeleteBook}
           >
-            <Text style={globalStyles.addButtonText}>Delete Book</Text>
+            <Text style={globalStyles.addButtonText}>Slet bog</Text>
           </TouchableOpacity>
         </View>
       </View>

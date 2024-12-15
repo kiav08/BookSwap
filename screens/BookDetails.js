@@ -182,7 +182,7 @@ export default function BookDetails({ navigation, route }) {
 
     
       if (isFollowing) {
-        // Stop med at følge bogen
+        // Unfollow book
         onValue(followRef, (snapshot) => {
           const followedBooks = snapshot.val() || {};
           const bookKey = Object.keys(followedBooks).find(
@@ -201,13 +201,16 @@ export default function BookDetails({ navigation, route }) {
           }
         }, { onlyOnce: true });
       } else {
-        // Følg bogen
+        // Follow book params for new follow
         const newFollow = {
           bookId: book.id,
           title: book.title,
           author: book.author,
           price: book.price,
           imageBase64: book.imageBase64 || null,
+          year: book.year,
+          subject: book.subject,
+          location: book.location
         };
 
     // Brug "set()" i stedet for "push()" for at opdatere den eksisterende bog

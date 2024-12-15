@@ -223,6 +223,7 @@ export default function Homepage({ navigation }) {
               subject: book.subject,
               year: book.year,
               price: book.price,
+              location: book.location,
             },
           };
 

@@ -1,44 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { getDatabase, ref, onValue } from 'firebase/database';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function NotificationsScreen() {
   const [priceChanges, setPriceChanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newChanges, setNewChanges] = useState([]); 
+  const [newChanges, setNewChanges] = useState([]);
   const [currentUser, setCurrentUser] = useState(null); // State for current user
   const auth = getAuth();
-  
+
   /*/*==================  USE-EFFECT function ==================== */
   // Check auth state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      //if user is logged in set the current user and console log the user
-      if (user){
-        setCurrentUser(user);
-        console.log('User is logged in:', user);
-      }
-      //if no user is logged in, console log the user
+      // Check if user is logged in
       if (user) {
-        // Fetch user data if logged in
+        setCurrentUser(user);
+        console.log("User is logged in:", user);
+      }
+
+      //if user is logged in fetch the price changes
+      if (user) {
         fetchPriceChanges(user.uid);
       } else {
         // Set current user to null if no user is logged in
-        console.log('No user is logged in', user);
+        console.log("No user is logged in", user);
         setCurrentUser(null);
       }
     });
-    
-    return () => unsubscribe(); // Unsubscribe on component unmount
+
+    // Unsubscribe from the auth state listener when the component is unmounted
+    return () => unsubscribe();
   }, []);
 
   /*==================  FETCH-PRICE-CHANGES FUNCTION ==================== */
   // Function to fetch price changes
   const fetchPriceChanges = (uid) => {
     const db = getDatabase();
-    
+
     const followedBooksRef = ref(db, `users/${uid}/followedBooks`);
 
     // Listen for changes to the followed books
@@ -48,6 +49,7 @@ export default function NotificationsScreen() {
         const data = snapshot.val();
         const changesArray = [];
 
+        // Loop through the followed books
         if (data) {
           Object.keys(data).forEach((bookId) => {
             const book = data[bookId];
@@ -61,17 +63,18 @@ export default function NotificationsScreen() {
               });
             }
           });
+
           //if there are any changes, set the state
           setPriceChanges(changesArray);
           // Save as new changes
-          setNewChanges(changesArray); 
+          setNewChanges(changesArray);
         } else {
-          setError('No followed books found');
+          setError("No followed books found");
         }
         setLoading(false);
       },
       (error) => {
-        setError('Error fetching followed books');
+        setError("Error fetching followed books");
         console.error(error);
         setLoading(false);
       }
@@ -85,9 +88,9 @@ export default function NotificationsScreen() {
   const handleChangeVisualEffect = (bookId) => {
     // Remove the change from the newChanges state after 3 seconds
     setTimeout(() => {
-    // Filter out the change with the given ID
+      // Filter out the change with the given ID
       setNewChanges((prevChanges) =>
-    // Return all changes except the one with the given ID
+        // Return all changes except the one with the given ID
         prevChanges.filter((change) => change.id !== bookId)
       );
     }, 3000);
@@ -109,7 +112,7 @@ export default function NotificationsScreen() {
     );
   }
 
-/*==================  RETURN-STATEMENT================== */
+  /*==================  RETURN-STATEMENT================== */
   return (
     <View style={styles.container}>
       <View style={styles.banner}>
@@ -127,12 +130,21 @@ export default function NotificationsScreen() {
           priceChanges.map((change, index) => (
             <View
               key={index}
-              style={[styles.changeItem, newChanges.some((newChange) => newChange.id === change.id) ? styles.newChangeItem : {}]}
+              style={[
+                styles.changeItem,
+                newChanges.some((newChange) => newChange.id === change.id)
+                  ? styles.newChangeItem
+                  : {},
+              ]}
               onLayout={() => handleChangeVisualEffect(change.id)}
             >
               <Text style={styles.bookTitle}>Bogen: {change.bookTitle}</Text>
-              <Text style={styles.priceChange}>Ny pris: {change.newPrice} DKK</Text>
-              <Text style={styles.timestamp}>Dato: {new Date(change.timestamp).toLocaleString()}</Text>
+              <Text style={styles.priceChange}>
+                Ny pris: {change.newPrice} DKK
+              </Text>
+              <Text style={styles.timestamp}>
+                Dato: {new Date(change.timestamp).toLocaleString()}
+              </Text>
             </View>
           ))
         )}
@@ -145,76 +157,76 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F0E5',
+    backgroundColor: "#F0F0E5",
   },
   banner: {
     margin: 20,
     marginTop: 50,
-    backgroundColor: '#DB8D16',
+    backgroundColor: "#DB8D16",
     padding: 15,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 10,
   },
   bannerText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   bannerTexti: {
-    color: '#000',
+    color: "#000",
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   scrollView: {
     padding: 20,
   },
   changeItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginBottom: 15,
     padding: 15,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
     elevation: 2,
   },
   newChangeItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderLeftWidth: 5,
-    borderLeftColor: '#DB8D16',
+    borderLeftColor: "#DB8D16",
   },
   bookTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 16,
     marginBottom: 5,
   },
   priceChange: {
     fontSize: 14,
-    color: '#388E3C',
+    color: "#388E3C",
     marginBottom: 5,
   },
   timestamp: {
     fontSize: 12,
-    color: '#757575',
+    color: "#757575",
   },
   noChangesText: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    color: '#757575',
+    color: "#757575",
   },
   loadingText: {
     fontSize: 18,
-    textAlign: 'center',
-    color: '#757575',
+    textAlign: "center",
+    color: "#757575",
     marginTop: 20,
   },
   errorText: {
     fontSize: 16,
-    textAlign: 'center',
-    color: '#d32f2f',
+    textAlign: "center",
+    color: "#d32f2f",
     marginTop: 20,
   },
   separator: {
