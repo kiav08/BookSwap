@@ -10,18 +10,22 @@ export default function NotificationsScreen() {
   const [newChanges, setNewChanges] = useState([]); 
   const [currentUser, setCurrentUser] = useState(null); // State for current user
   const auth = getAuth();
-
+  
+  /*/*==================  USE-EFFECT function ==================== */
   // Check auth state and fetch user data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      //if user is logged in set the current user and console log the user
       if (user){
         setCurrentUser(user);
         console.log('User is logged in:', user);
       }
+      //if no user is logged in, console log the user
       if (user) {
         // Fetch user data if logged in
         fetchPriceChanges(user.uid);
       } else {
+        // Set current user to null if no user is logged in
         console.log('No user is logged in', user);
         setCurrentUser(null);
       }
@@ -30,11 +34,14 @@ export default function NotificationsScreen() {
     return () => unsubscribe(); // Unsubscribe on component unmount
   }, []);
 
+  /*==================  FETCH-PRICE-CHANGES FUNCTION ==================== */
   // Function to fetch price changes
   const fetchPriceChanges = (uid) => {
     const db = getDatabase();
+    
     const followedBooksRef = ref(db, `users/${uid}/followedBooks`);
 
+    // Listen for changes to the followed books
     const unsubscribe = onValue(
       followedBooksRef,
       (snapshot) => {
@@ -44,6 +51,7 @@ export default function NotificationsScreen() {
         if (data) {
           Object.keys(data).forEach((bookId) => {
             const book = data[bookId];
+            // Check if the book has a price
             if (book.price) {
               changesArray.push({
                 bookTitle: book.title,
@@ -53,13 +61,13 @@ export default function NotificationsScreen() {
               });
             }
           });
-
+          //if there are any changes, set the state
           setPriceChanges(changesArray);
-          setNewChanges(changesArray); // Mark as new changes
+          // Save as new changes
+          setNewChanges(changesArray); 
         } else {
           setError('No followed books found');
         }
-
         setLoading(false);
       },
       (error) => {
@@ -72,9 +80,14 @@ export default function NotificationsScreen() {
     return () => unsubscribe();
   };
 
+  /*==================  HANDLE-CHANGE-VISUAL-EFFECT FUNCTION ==================== */
+  // Function to handle visual effect for new changes on the screen
   const handleChangeVisualEffect = (bookId) => {
+    // Remove the change from the newChanges state after 3 seconds
     setTimeout(() => {
+    // Filter out the change with the given ID
       setNewChanges((prevChanges) =>
+    // Return all changes except the one with the given ID
         prevChanges.filter((change) => change.id !== bookId)
       );
     }, 3000);
@@ -96,7 +109,7 @@ export default function NotificationsScreen() {
     );
   }
 
-///////////////////////////RETURN-STATEMENT/////////////////////////////
+/*==================  RETURN-STATEMENT================== */
   return (
     <View style={styles.container}>
       <View style={styles.banner}>
@@ -128,6 +141,7 @@ export default function NotificationsScreen() {
   );
 }
 
+/* ========================= STYLES ========================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

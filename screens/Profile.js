@@ -29,7 +29,7 @@ export default function Profile() {
   // State variables
   const [user, setUser] = useState(null);
   const [books, setBooks] = useState([]);
-  const [likedBooks, setLikedBooks] = useState([]);
+  const [LikedBooks, setLikedBooks] = useState([]);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [createEmail, setCreateEmail] = useState("");
@@ -307,7 +307,7 @@ export default function Profile() {
 
       <View style={globalStyles.separator} />
 
-      {/* User's boks*/}
+{/* User's boks*/}
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine annoncer</Text>
         <View style={globalStyles.gridContainer}>
@@ -342,7 +342,7 @@ export default function Profile() {
       <View style={globalStyles.sectionContainer}>
         <Text style={globalStyles.heading}>Dine likede bøger</Text>
         <View style={globalStyles.gridContainer}>
-          {likedBooks.map((book) => (
+          {LikedBooks.map((book) => (
             <TouchableOpacity
               key={book.id}
               style={globalStyles.box}
