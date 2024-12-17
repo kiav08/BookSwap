@@ -79,7 +79,7 @@ export default function EditBookDetails({ navigation, route }) {
       });
   };
   
-
+/* ========================= HANDLE DELETNG BOOK FUNCTION =========================*/
 // Function to handle deleting the book
 const handleDeleteBook = () => {
   if (!book || !book.id) {
