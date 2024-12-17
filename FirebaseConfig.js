@@ -1,12 +1,10 @@
 import { getApps, initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore"; // Tilføj denne import
-import {
-  getAuth,
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 // Firebase-konfiguration
 const firebaseConfig = {
-  apiKey: "AIzaSyB5q2uzhMmKzoNZw6QjEd1Wiof3dfBt_ps",
+  apiKey: "*INSERT API KEY HERE",
   authDomain: "my-app-4-88614.firebaseapp.com",
   databaseURL:
     "https://my-app-4-88614-default-rtdb.europe-west1.firebasedatabase.app",

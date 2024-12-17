@@ -53,8 +53,9 @@ BookSWap is a platform for students which hopes to create an environment where s
 1. Make sure you have downloaded 'Expo Go' on the phone
 2. Make sure the computer and phone are on the same wifi
 3. Download the code
-4. Navigate to the code directory in your terminal
-5. Run the following
+4. Find the API key in the assignment, under "bilag 9.1" and insert in FirebaseConfig.js
+5. Navigate to the code directory in your terminal
+6. Run the following
 
 ...
 npm install
